@@ -274,14 +274,42 @@ fn parse_timestamp(
             format!("{field_name} must be an RFC3339 timestamp string."),
         ));
     }
-    OffsetDateTime::parse(raw, &Rfc3339)
-        .map(|value| value.to_offset(UtcOffset::UTC))
-        .map_err(|_error| {
-            VerificationError::new(
-                VerificationErrorCode::InvalidTimestamp,
-                format!("{field_name} must be an RFC3339 timestamp string."),
-            )
-        })
+    let invalid = || {
+        VerificationError::new(
+            VerificationErrorCode::InvalidTimestamp,
+            format!("{field_name} must be an RFC3339 timestamp string."),
+        )
+    };
+    let parsed = OffsetDateTime::parse(raw, &Rfc3339)
+        .map_err(|_error| invalid())?
+        .to_offset(UtcOffset::UTC);
+    if parsed.year() < 1 {
+        return Err(invalid());
+    }
+    // The reference keeps microsecond precision and drops anything finer.
+    parsed
+        .replace_nanosecond(parsed.microsecond() * 1_000)
+        .map_err(|_error| invalid())
+}
+
+/// Renders a UTC timestamp exactly like the reference's canonical form
+/// (Python `datetime.isoformat` in UTC with a "Z" suffix): six fractional
+/// digits when the microsecond component is non-zero, none otherwise.
+/// Signed payloads and action hashes embed this form.
+fn format_timestamp(value: OffsetDateTime) -> String {
+    let base = format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}",
+        value.year(),
+        u8::from(value.month()),
+        value.day(),
+        value.hour(),
+        value.minute(),
+        value.second()
+    );
+    match value.microsecond() {
+        0 => format!("{base}Z"),
+        micros => format!("{base}.{micros:06}Z"),
+    }
 }
 
 fn normalize_timestamp(
@@ -289,13 +317,7 @@ fn normalize_timestamp(
     field_name: &str,
     code: VerificationErrorCode,
 ) -> Result<String, VerificationError> {
-    let parsed = parse_timestamp(raw, field_name, code)?;
-    parsed.format(&Rfc3339).map_err(|_error| {
-        VerificationError::new(
-            code,
-            format!("{field_name} must be an RFC3339 timestamp string."),
-        )
-    })
+    Ok(format_timestamp(parse_timestamp(raw, field_name, code)?))
 }
 
 fn normalize_action_intent(intent: ActionIntent) -> Result<ActionIntent, VerificationError> {

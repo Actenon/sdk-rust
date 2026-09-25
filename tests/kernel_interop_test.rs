@@ -332,3 +332,29 @@ fn accepts_current_canonicalization_profile() {
         "inclusion/unknown_profile_label",
     ]);
 }
+
+#[test]
+fn accepts_sub_second_timestamps() {
+    // The reference normalizes timestamps to UTC with microsecond precision
+    // (datetime.isoformat: six fractional digits whenever the microsecond
+    // component is non-zero), so proofs minted from a real clock carry
+    // fractional seconds in the signed payload and the action-hash input.
+    run_cases(&[
+        "hs256/subsecond_micro_123456",
+        "hs256/subsecond_micro_123456_before_nbf",
+        "hs256/subsecond_micro_500000",
+        "hs256/subsecond_micro_500000_before_nbf",
+        "hs256/subsecond_micro_000001",
+        "hs256/subsecond_micro_000001_before_nbf",
+        "ed25519/subsecond_micro_500000",
+        "hs256/frac7_pccb_nbf",
+        "hs256/frac9_intent_issued",
+        "hs256/issuer_signed_pccb_frac_nbf",
+        "hs256/issuer_signed_pccb_frac_nbf_presented_short",
+        "hs256/pccb_nbf_frac_zero",
+        "hs256/pccb_nbf_offset_equiv",
+        "hs256/pccb_nbf_leap",
+        "hs256/time_nbf_minus_skew_minus1us_skew0",
+        "hs256/time_exp_plus_skew_plus1us_skew2000",
+    ]);
+}
