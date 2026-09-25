@@ -9,7 +9,7 @@ use sha2::{Digest, Sha256};
 use time::format_description::well_known::Rfc3339;
 use time::OffsetDateTime;
 
-use crate::canonical::canonicalize_bytes;
+use crate::canonical::{canonicalize_bytes, is_accepted_canonicalization};
 use crate::countersignature::ReceiptDigest;
 use crate::types::PartyRef;
 
@@ -223,10 +223,10 @@ fn parse_digest(
         &format!("{field_name}.value"),
         "INVALID_LEAF_DIGEST",
     )?;
-    if digest.algorithm != "sha-256" || digest.canonicalization != "RFC8785-JCS" {
+    if digest.algorithm != "sha-256" || !is_accepted_canonicalization(&digest.canonicalization) {
         return Err(error(
             "INVALID_LEAF_DIGEST",
-            "leaf digest must declare sha-256 and RFC8785-JCS",
+            "leaf digest must declare sha-256 and a known canonicalization profile",
         ));
     }
     Ok(digest)

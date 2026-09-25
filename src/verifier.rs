@@ -3,7 +3,7 @@ use serde_json::{json, Deserializer, Value};
 use time::format_description::well_known::Rfc3339;
 use time::{Duration, OffsetDateTime, UtcOffset};
 
-use crate::canonical::{canonicalize_bytes, sha256_hex};
+use crate::canonical::{canonicalize_bytes, is_accepted_canonicalization, sha256_hex};
 use crate::errors::{VerificationError, VerificationErrorCode};
 use crate::signers::SignatureVerifier;
 use crate::types::{
@@ -187,7 +187,7 @@ impl<V: SignatureVerifier> Verifier<V> {
             ));
         }
         if normalized_pccb.action_hash.algorithm != "sha-256"
-            || normalized_pccb.action_hash.canonicalization != "RFC8785-JCS"
+            || !is_accepted_canonicalization(&normalized_pccb.action_hash.canonicalization)
         {
             return Err(VerificationError::new(
                 VerificationErrorCode::ActionHashAlgorithmInvalid,

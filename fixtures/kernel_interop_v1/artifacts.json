@@ -1,0 +1,970 @@
+{
+ "contract": {
+  "name": "kernel_interop_artifacts",
+  "version": "v1"
+ },
+ "reference": {
+  "implementation": "actenon-kernel",
+  "version": "1.2.1"
+ },
+ "countersignature_trusted_keys": {
+  "contract": {
+   "name": "key_discovery",
+   "version": "v1"
+  },
+  "issuer": {
+   "type": "service",
+   "id": "witness_interop"
+  },
+  "keys": [
+   {
+    "key_id": "ed25519-issuer-2026",
+    "algorithm": "EdDSA",
+    "use": [
+     "receipt_countersignature"
+    ],
+    "status": "active",
+    "public_key_jwk": {
+     "kty": "OKP",
+     "crv": "Ed25519",
+     "x": "6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw",
+     "kid": "ed25519-issuer-2026",
+     "alg": "EdDSA"
+    }
+   }
+  ]
+ },
+ "approval_trusted_keys": {
+  "contract": {
+   "name": "key_discovery",
+   "version": "v1"
+  },
+  "issuer": {
+   "type": "human",
+   "id": "approver_interop"
+  },
+  "keys": [
+   {
+    "key_id": "ed25519-issuer-2026",
+    "algorithm": "EdDSA",
+    "use": "approval_artifact",
+    "status": "active",
+    "public_key_jwk": {
+     "kty": "OKP",
+     "crv": "Ed25519",
+     "x": "6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw",
+     "kid": "ed25519-issuer-2026",
+     "alg": "EdDSA"
+    }
+   }
+  ]
+ },
+ "countersignatures": [
+  {
+   "id": "receipt_current_profile",
+   "receipt_or_digest": {
+    "capability": "finance.transfer.release",
+    "contract": {
+     "name": "receipt",
+     "version": "v1"
+    },
+    "issued_at": "2026-01-15T12:01:00Z",
+    "metadata": {
+     "pass": "keystone_pass_4",
+     "vector_id": "cloud_invoice_payment_v1"
+    },
+    "outcome": "executed",
+    "proof_binding": {
+     "action_hash": "ff83a7e14dfbc6e2b361e8a9a4a802b5ba5a96ba26aa19f76bb23230da8ced24",
+     "intent_id": "intent_cloud_invoice_v1",
+     "pccb_id": "pccb_proof_cloud_invoice_v1"
+    },
+    "receipt_id": "receipt_cloud_invoice_v1"
+   },
+   "countersignature": {
+    "contract": {
+     "name": "receipt_countersignature",
+     "version": "v1"
+    },
+    "receipt_digest": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "47dbb2e07068f0f5459d0ad4c2ca425c721962b89ff9c29f3305c3b77bacfb1c"
+    },
+    "witness": {
+     "type": "service",
+     "id": "witness_interop"
+    },
+    "signed_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "S1N5yi3nIVU6-ytKGLTJ0IfPLHcH1wFBaCs7k_0V9alpW8PDDcYBlvN0XGq_OYqGBMgTSD_9-IIH7fmy0UUbDg"
+    }
+   },
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "digest_current_profile",
+   "receipt_or_digest": {
+    "algorithm": "sha-256",
+    "canonicalization": "ACTENON-JCS-STRICT-1",
+    "value": "47dbb2e07068f0f5459d0ad4c2ca425c721962b89ff9c29f3305c3b77bacfb1c"
+   },
+   "countersignature": {
+    "contract": {
+     "name": "receipt_countersignature",
+     "version": "v1"
+    },
+    "receipt_digest": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "47dbb2e07068f0f5459d0ad4c2ca425c721962b89ff9c29f3305c3b77bacfb1c"
+    },
+    "witness": {
+     "type": "service",
+     "id": "witness_interop"
+    },
+    "signed_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "S1N5yi3nIVU6-ytKGLTJ0IfPLHcH1wFBaCs7k_0V9alpW8PDDcYBlvN0XGq_OYqGBMgTSD_9-IIH7fmy0UUbDg"
+    }
+   },
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "digest_legacy_label_vs_current_profile",
+   "receipt_or_digest": {
+    "algorithm": "sha-256",
+    "canonicalization": "RFC8785-JCS",
+    "value": "47dbb2e07068f0f5459d0ad4c2ca425c721962b89ff9c29f3305c3b77bacfb1c"
+   },
+   "countersignature": {
+    "contract": {
+     "name": "receipt_countersignature",
+     "version": "v1"
+    },
+    "receipt_digest": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "47dbb2e07068f0f5459d0ad4c2ca425c721962b89ff9c29f3305c3b77bacfb1c"
+    },
+    "witness": {
+     "type": "service",
+     "id": "witness_interop"
+    },
+    "signed_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "S1N5yi3nIVU6-ytKGLTJ0IfPLHcH1wFBaCs7k_0V9alpW8PDDcYBlvN0XGq_OYqGBMgTSD_9-IIH7fmy0UUbDg"
+    }
+   },
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "legacy_profile_countersignature",
+   "receipt_or_digest": {
+    "capability": "finance.transfer.release",
+    "contract": {
+     "name": "receipt",
+     "version": "v1"
+    },
+    "issued_at": "2026-01-15T12:01:00Z",
+    "metadata": {
+     "pass": "keystone_pass_4",
+     "vector_id": "cloud_invoice_payment_v1"
+    },
+    "outcome": "executed",
+    "proof_binding": {
+     "action_hash": "ff83a7e14dfbc6e2b361e8a9a4a802b5ba5a96ba26aa19f76bb23230da8ced24",
+     "intent_id": "intent_cloud_invoice_v1",
+     "pccb_id": "pccb_proof_cloud_invoice_v1"
+    },
+    "receipt_id": "receipt_cloud_invoice_v1"
+   },
+   "countersignature": {
+    "contract": {
+     "name": "receipt_countersignature",
+     "version": "v1"
+    },
+    "receipt_digest": {
+     "algorithm": "sha-256",
+     "canonicalization": "RFC8785-JCS",
+     "value": "47dbb2e07068f0f5459d0ad4c2ca425c721962b89ff9c29f3305c3b77bacfb1c"
+    },
+    "witness": {
+     "type": "service",
+     "id": "witness_interop"
+    },
+    "signed_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "Nq3AOHhKeH2Ei79SPRi_nMak_pdkEFZebVnIxvpz0LiX5mIPv_xBF4vecHMuYpTrtMW-TXssVIjs2CA4qDSqAw"
+    }
+   },
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "unknown_profile_label",
+   "receipt_or_digest": {
+    "capability": "finance.transfer.release",
+    "contract": {
+     "name": "receipt",
+     "version": "v1"
+    },
+    "issued_at": "2026-01-15T12:01:00Z",
+    "metadata": {
+     "pass": "keystone_pass_4",
+     "vector_id": "cloud_invoice_payment_v1"
+    },
+    "outcome": "executed",
+    "proof_binding": {
+     "action_hash": "ff83a7e14dfbc6e2b361e8a9a4a802b5ba5a96ba26aa19f76bb23230da8ced24",
+     "intent_id": "intent_cloud_invoice_v1",
+     "pccb_id": "pccb_proof_cloud_invoice_v1"
+    },
+    "receipt_id": "receipt_cloud_invoice_v1"
+   },
+   "countersignature": {
+    "contract": {
+     "name": "receipt_countersignature",
+     "version": "v1"
+    },
+    "receipt_digest": {
+     "algorithm": "sha-256",
+     "canonicalization": "JSON-LD",
+     "value": "47dbb2e07068f0f5459d0ad4c2ca425c721962b89ff9c29f3305c3b77bacfb1c"
+    },
+    "witness": {
+     "type": "service",
+     "id": "witness_interop"
+    },
+    "signed_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "eoUrjJy747avWGANX0eDlVYyVGWCoyW9-XrQJrl1hN7l4uoPGVkBvj7dBUFZpjkRHNuhSlekk4btvPN_GVYVCw"
+    }
+   },
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "INVALID_RECEIPT_DIGEST"
+   }
+  },
+  {
+   "id": "anchor_reference_null",
+   "receipt_or_digest": {
+    "capability": "finance.transfer.release",
+    "contract": {
+     "name": "receipt",
+     "version": "v1"
+    },
+    "issued_at": "2026-01-15T12:01:00Z",
+    "metadata": {
+     "pass": "keystone_pass_4",
+     "vector_id": "cloud_invoice_payment_v1"
+    },
+    "outcome": "executed",
+    "proof_binding": {
+     "action_hash": "ff83a7e14dfbc6e2b361e8a9a4a802b5ba5a96ba26aa19f76bb23230da8ced24",
+     "intent_id": "intent_cloud_invoice_v1",
+     "pccb_id": "pccb_proof_cloud_invoice_v1"
+    },
+    "receipt_id": "receipt_cloud_invoice_v1"
+   },
+   "countersignature": {
+    "contract": {
+     "name": "receipt_countersignature",
+     "version": "v1"
+    },
+    "receipt_digest": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "47dbb2e07068f0f5459d0ad4c2ca425c721962b89ff9c29f3305c3b77bacfb1c"
+    },
+    "witness": {
+     "type": "service",
+     "id": "witness_interop"
+    },
+    "signed_at": "2026-06-06T12:00:00Z",
+    "anchor_reference": null,
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "S1N5yi3nIVU6-ytKGLTJ0IfPLHcH1wFBaCs7k_0V9alpW8PDDcYBlvN0XGq_OYqGBMgTSD_9-IIH7fmy0UUbDg"
+    }
+   },
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "anchor_reference_object",
+   "receipt_or_digest": {
+    "capability": "finance.transfer.release",
+    "contract": {
+     "name": "receipt",
+     "version": "v1"
+    },
+    "issued_at": "2026-01-15T12:01:00Z",
+    "metadata": {
+     "pass": "keystone_pass_4",
+     "vector_id": "cloud_invoice_payment_v1"
+    },
+    "outcome": "executed",
+    "proof_binding": {
+     "action_hash": "ff83a7e14dfbc6e2b361e8a9a4a802b5ba5a96ba26aa19f76bb23230da8ced24",
+     "intent_id": "intent_cloud_invoice_v1",
+     "pccb_id": "pccb_proof_cloud_invoice_v1"
+    },
+    "receipt_id": "receipt_cloud_invoice_v1"
+   },
+   "countersignature": {
+    "contract": {
+     "name": "receipt_countersignature",
+     "version": "v1"
+    },
+    "receipt_digest": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "47dbb2e07068f0f5459d0ad4c2ca425c721962b89ff9c29f3305c3b77bacfb1c"
+    },
+    "witness": {
+     "type": "service",
+     "id": "witness_interop"
+    },
+    "signed_at": "2026-06-06T12:00:00Z",
+    "anchor_reference": {
+     "log_id": "log-1",
+     "leaf_index": 3
+    },
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "OPVztTdOP-YfOxMnTeBcfIrKAQuL1KHxlGu3iD6cP0wGGRpfnzqPqJu6ComYFHd2Braxq_6BHspz-gUpOQRlAg"
+    }
+   },
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "signature_value_crlf",
+   "receipt_or_digest": {
+    "capability": "finance.transfer.release",
+    "contract": {
+     "name": "receipt",
+     "version": "v1"
+    },
+    "issued_at": "2026-01-15T12:01:00Z",
+    "metadata": {
+     "pass": "keystone_pass_4",
+     "vector_id": "cloud_invoice_payment_v1"
+    },
+    "outcome": "executed",
+    "proof_binding": {
+     "action_hash": "ff83a7e14dfbc6e2b361e8a9a4a802b5ba5a96ba26aa19f76bb23230da8ced24",
+     "intent_id": "intent_cloud_invoice_v1",
+     "pccb_id": "pccb_proof_cloud_invoice_v1"
+    },
+    "receipt_id": "receipt_cloud_invoice_v1"
+   },
+   "countersignature": {
+    "contract": {
+     "name": "receipt_countersignature",
+     "version": "v1"
+    },
+    "receipt_digest": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "47dbb2e07068f0f5459d0ad4c2ca425c721962b89ff9c29f3305c3b77bacfb1c"
+    },
+    "witness": {
+     "type": "service",
+     "id": "witness_interop"
+    },
+    "signed_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "S1N5yi3nIVU6-ytKGLTJ\r\n0IfPLHcH1wFBaCs7k_0V9alpW8PDDcYBlvN0XGq_OYqGBMgTSD_9-IIH7fmy0UUbDg"
+    }
+   },
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "INVALID_COUNTERSIGNATURE"
+   }
+  },
+  {
+   "id": "signature_value_padded",
+   "receipt_or_digest": {
+    "capability": "finance.transfer.release",
+    "contract": {
+     "name": "receipt",
+     "version": "v1"
+    },
+    "issued_at": "2026-01-15T12:01:00Z",
+    "metadata": {
+     "pass": "keystone_pass_4",
+     "vector_id": "cloud_invoice_payment_v1"
+    },
+    "outcome": "executed",
+    "proof_binding": {
+     "action_hash": "ff83a7e14dfbc6e2b361e8a9a4a802b5ba5a96ba26aa19f76bb23230da8ced24",
+     "intent_id": "intent_cloud_invoice_v1",
+     "pccb_id": "pccb_proof_cloud_invoice_v1"
+    },
+    "receipt_id": "receipt_cloud_invoice_v1"
+   },
+   "countersignature": {
+    "contract": {
+     "name": "receipt_countersignature",
+     "version": "v1"
+    },
+    "receipt_digest": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "47dbb2e07068f0f5459d0ad4c2ca425c721962b89ff9c29f3305c3b77bacfb1c"
+    },
+    "witness": {
+     "type": "service",
+     "id": "witness_interop"
+    },
+    "signed_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "S1N5yi3nIVU6-ytKGLTJ0IfPLHcH1wFBaCs7k_0V9alpW8PDDcYBlvN0XGq_OYqGBMgTSD_9-IIH7fmy0UUbDg="
+    }
+   },
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "INVALID_COUNTERSIGNATURE"
+   }
+  },
+  {
+   "id": "contract_extra_member",
+   "receipt_or_digest": {
+    "capability": "finance.transfer.release",
+    "contract": {
+     "name": "receipt",
+     "version": "v1"
+    },
+    "issued_at": "2026-01-15T12:01:00Z",
+    "metadata": {
+     "pass": "keystone_pass_4",
+     "vector_id": "cloud_invoice_payment_v1"
+    },
+    "outcome": "executed",
+    "proof_binding": {
+     "action_hash": "ff83a7e14dfbc6e2b361e8a9a4a802b5ba5a96ba26aa19f76bb23230da8ced24",
+     "intent_id": "intent_cloud_invoice_v1",
+     "pccb_id": "pccb_proof_cloud_invoice_v1"
+    },
+    "receipt_id": "receipt_cloud_invoice_v1"
+   },
+   "countersignature": {
+    "contract": {
+     "name": "receipt_countersignature",
+     "version": "v1",
+     "extra": "x"
+    },
+    "receipt_digest": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "47dbb2e07068f0f5459d0ad4c2ca425c721962b89ff9c29f3305c3b77bacfb1c"
+    },
+    "witness": {
+     "type": "service",
+     "id": "witness_interop"
+    },
+    "signed_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "S1N5yi3nIVU6-ytKGLTJ0IfPLHcH1wFBaCs7k_0V9alpW8PDDcYBlvN0XGq_OYqGBMgTSD_9-IIH7fmy0UUbDg"
+    }
+   },
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "INVALID_COUNTERSIGNATURE"
+   }
+  }
+ ],
+ "approvals": [
+  {
+   "id": "current_profile",
+   "approval": {
+    "contract": {
+     "name": "approval_artifact",
+     "version": "v1"
+    },
+    "approval_id": "approval_interop_001",
+    "approver": {
+     "type": "human",
+     "id": "approver_interop"
+    },
+    "approval_type": "finance_approver",
+    "decision": "approved",
+    "action_hash": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+    },
+    "issued_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "f7tYDQvWGH7QwObY5cH8G6fxMelyU_Q2FMmKa9VS_BmzuolN1hfVag-MH3XBXmQoKECcHARUqTjpxEMZMxn_Cg"
+    }
+   },
+   "expected_action_hash": {
+    "algorithm": "sha-256",
+    "canonicalization": "ACTENON-JCS-STRICT-1",
+    "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+   },
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "current_profile_expected_legacy_label",
+   "approval": {
+    "contract": {
+     "name": "approval_artifact",
+     "version": "v1"
+    },
+    "approval_id": "approval_interop_001",
+    "approver": {
+     "type": "human",
+     "id": "approver_interop"
+    },
+    "approval_type": "finance_approver",
+    "decision": "approved",
+    "action_hash": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+    },
+    "issued_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "f7tYDQvWGH7QwObY5cH8G6fxMelyU_Q2FMmKa9VS_BmzuolN1hfVag-MH3XBXmQoKECcHARUqTjpxEMZMxn_Cg"
+    }
+   },
+   "expected_action_hash": {
+    "algorithm": "sha-256",
+    "canonicalization": "RFC8785-JCS",
+    "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+   },
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "legacy_profile_expected_current_label",
+   "approval": {
+    "contract": {
+     "name": "approval_artifact",
+     "version": "v1"
+    },
+    "approval_id": "approval_interop_001",
+    "approver": {
+     "type": "human",
+     "id": "approver_interop"
+    },
+    "approval_type": "finance_approver",
+    "decision": "approved",
+    "action_hash": {
+     "algorithm": "sha-256",
+     "canonicalization": "RFC8785-JCS",
+     "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+    },
+    "issued_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "jykhM7PvBKDWYVFjweppPw7UNirFPD_Fon8oYKqhqMjUzmdtPiMnD8UKEJsRoPXAMPMudNk0_VGF4cEOHwH9CA"
+    }
+   },
+   "expected_action_hash": {
+    "algorithm": "sha-256",
+    "canonicalization": "ACTENON-JCS-STRICT-1",
+    "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+   },
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "different_action",
+   "approval": {
+    "contract": {
+     "name": "approval_artifact",
+     "version": "v1"
+    },
+    "approval_id": "approval_interop_001",
+    "approver": {
+     "type": "human",
+     "id": "approver_interop"
+    },
+    "approval_type": "finance_approver",
+    "decision": "approved",
+    "action_hash": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+    },
+    "issued_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "f7tYDQvWGH7QwObY5cH8G6fxMelyU_Q2FMmKa9VS_BmzuolN1hfVag-MH3XBXmQoKECcHARUqTjpxEMZMxn_Cg"
+    }
+   },
+   "expected_action_hash": {
+    "algorithm": "sha-256",
+    "canonicalization": "ACTENON-JCS-STRICT-1",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
+   },
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "APPROVAL_ACTION_MISMATCH"
+   }
+  },
+  {
+   "id": "unknown_profile_label",
+   "approval": {
+    "contract": {
+     "name": "approval_artifact",
+     "version": "v1"
+    },
+    "approval_id": "approval_interop_001",
+    "approver": {
+     "type": "human",
+     "id": "approver_interop"
+    },
+    "approval_type": "finance_approver",
+    "decision": "approved",
+    "action_hash": {
+     "algorithm": "sha-256",
+     "canonicalization": "JSON-LD",
+     "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+    },
+    "issued_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "HUGhaRzwwHwCu-b1C91llCS9ZLpYE3fOrfFtU6-p7BHlS5fKesH2gf7ttMtggbjTrnGk1a7rcHVT3O2gQGnoCQ"
+    }
+   },
+   "expected_action_hash": null,
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "INVALID_APPROVAL_ARTIFACT"
+   }
+  },
+  {
+   "id": "expected_hash_unknown_label",
+   "approval": {
+    "contract": {
+     "name": "approval_artifact",
+     "version": "v1"
+    },
+    "approval_id": "approval_interop_001",
+    "approver": {
+     "type": "human",
+     "id": "approver_interop"
+    },
+    "approval_type": "finance_approver",
+    "decision": "approved",
+    "action_hash": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+    },
+    "issued_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "f7tYDQvWGH7QwObY5cH8G6fxMelyU_Q2FMmKa9VS_BmzuolN1hfVag-MH3XBXmQoKECcHARUqTjpxEMZMxn_Cg"
+    }
+   },
+   "expected_action_hash": {
+    "algorithm": "sha-256",
+    "canonicalization": "JSON-LD",
+    "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+   },
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "INVALID_APPROVAL_ARTIFACT"
+   }
+  },
+  {
+   "id": "signature_value_lf",
+   "approval": {
+    "contract": {
+     "name": "approval_artifact",
+     "version": "v1"
+    },
+    "approval_id": "approval_interop_001",
+    "approver": {
+     "type": "human",
+     "id": "approver_interop"
+    },
+    "approval_type": "finance_approver",
+    "decision": "approved",
+    "action_hash": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+    },
+    "issued_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "f7tYDQvWGH7QwObY5cH8\nG6fxMelyU_Q2FMmKa9VS_BmzuolN1hfVag-MH3XBXmQoKECcHARUqTjpxEMZMxn_Cg"
+    }
+   },
+   "expected_action_hash": {
+    "algorithm": "sha-256",
+    "canonicalization": "ACTENON-JCS-STRICT-1",
+    "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+   },
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "SIGNATURE_INVALID"
+   }
+  },
+  {
+   "id": "contract_extra_member",
+   "approval": {
+    "contract": {
+     "name": "approval_artifact",
+     "version": "v1",
+     "extra": "x"
+    },
+    "approval_id": "approval_interop_001",
+    "approver": {
+     "type": "human",
+     "id": "approver_interop"
+    },
+    "approval_type": "finance_approver",
+    "decision": "approved",
+    "action_hash": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+    },
+    "issued_at": "2026-06-06T12:00:00Z",
+    "signature": {
+     "algorithm": "EdDSA",
+     "key_id": "ed25519-issuer-2026",
+     "encoding": "base64url",
+     "value": "f7tYDQvWGH7QwObY5cH8G6fxMelyU_Q2FMmKa9VS_BmzuolN1hfVag-MH3XBXmQoKECcHARUqTjpxEMZMxn_Cg"
+    }
+   },
+   "expected_action_hash": {
+    "algorithm": "sha-256",
+    "canonicalization": "ACTENON-JCS-STRICT-1",
+    "value": "a56bf6ba16da49e036173f9660afc5f9c5223aaf88f8c83ed6e06fe9335ffcda"
+   },
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "INVALID_APPROVAL_ARTIFACT"
+   }
+  }
+ ],
+ "inclusions": [
+  {
+   "id": "legacy_profile",
+   "digest": {
+    "algorithm": "sha-256",
+    "canonicalization": "RFC8785-JCS",
+    "value": "45c4949cc975ca51a6990ded2c45dc0ec6f92b3a9d547b9cd401e1c32133e1b1"
+   },
+   "inclusion_proof": {
+    "audit_path": [
+     "ec62b813f1d1a6242a051f788f88b5e4db3d948121a9e589df8e7f3d1826d7d9",
+     "2acddbbc6159accbd4959c3f3cbbbc8c22233932ef31ab29fb245c844c145334"
+    ],
+    "contract": {
+     "name": "transparency_inclusion_proof",
+     "version": "v1"
+    },
+    "hash_algorithm": "sha-256",
+    "leaf_digest": {
+     "algorithm": "sha-256",
+     "canonicalization": "RFC8785-JCS",
+     "value": "45c4949cc975ca51a6990ded2c45dc0ec6f92b3a9d547b9cd401e1c32133e1b1"
+    },
+    "leaf_index": 2,
+    "log_id": "actenon-transparency-fixture",
+    "tree_size": 4
+   },
+   "checkpoint": {
+    "contract": {
+     "name": "transparency_checkpoint",
+     "version": "v1"
+    },
+    "issued_at": "2026-06-06T12:01:00Z",
+    "log": {
+     "id": "actenon-transparency-fixture",
+     "type": "service"
+    },
+    "root_hash": {
+     "algorithm": "sha-256",
+     "encoding": "hex",
+     "value": "3e21ad68ad0b97b9bc2d70d18482fe83292288a3763f928cf94aef7d1ab66d1c"
+    },
+    "signature": {
+     "algorithm": "EdDSA",
+     "encoding": "base64url",
+     "key_id": "fixture-log-2026",
+     "value": "Nm_2TVRCysG-z9PZOjSvz5c-Jahwvucp92ZQBJBnasenIl0f71lM5c2wM9uM8JgorZonR9jbNZ9WVCut-hfXAw"
+    },
+    "tree_size": 4
+   },
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "current_profile",
+   "digest": {
+    "algorithm": "sha-256",
+    "canonicalization": "ACTENON-JCS-STRICT-1",
+    "value": "45c4949cc975ca51a6990ded2c45dc0ec6f92b3a9d547b9cd401e1c32133e1b1"
+   },
+   "inclusion_proof": {
+    "audit_path": [
+     "ec62b813f1d1a6242a051f788f88b5e4db3d948121a9e589df8e7f3d1826d7d9",
+     "2acddbbc6159accbd4959c3f3cbbbc8c22233932ef31ab29fb245c844c145334"
+    ],
+    "contract": {
+     "name": "transparency_inclusion_proof",
+     "version": "v1"
+    },
+    "hash_algorithm": "sha-256",
+    "leaf_digest": {
+     "algorithm": "sha-256",
+     "canonicalization": "ACTENON-JCS-STRICT-1",
+     "value": "45c4949cc975ca51a6990ded2c45dc0ec6f92b3a9d547b9cd401e1c32133e1b1"
+    },
+    "leaf_index": 2,
+    "log_id": "actenon-transparency-fixture",
+    "tree_size": 4
+   },
+   "checkpoint": {
+    "contract": {
+     "name": "transparency_checkpoint",
+     "version": "v1"
+    },
+    "issued_at": "2026-06-06T12:01:00Z",
+    "log": {
+     "id": "actenon-transparency-fixture",
+     "type": "service"
+    },
+    "root_hash": {
+     "algorithm": "sha-256",
+     "encoding": "hex",
+     "value": "3e21ad68ad0b97b9bc2d70d18482fe83292288a3763f928cf94aef7d1ab66d1c"
+    },
+    "signature": {
+     "algorithm": "EdDSA",
+     "encoding": "base64url",
+     "key_id": "fixture-log-2026",
+     "value": "Nm_2TVRCysG-z9PZOjSvz5c-Jahwvucp92ZQBJBnasenIl0f71lM5c2wM9uM8JgorZonR9jbNZ9WVCut-hfXAw"
+    },
+    "tree_size": 4
+   },
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "unknown_profile_label",
+   "digest": {
+    "algorithm": "sha-256",
+    "canonicalization": "JSON-LD",
+    "value": "45c4949cc975ca51a6990ded2c45dc0ec6f92b3a9d547b9cd401e1c32133e1b1"
+   },
+   "inclusion_proof": {
+    "audit_path": [
+     "ec62b813f1d1a6242a051f788f88b5e4db3d948121a9e589df8e7f3d1826d7d9",
+     "2acddbbc6159accbd4959c3f3cbbbc8c22233932ef31ab29fb245c844c145334"
+    ],
+    "contract": {
+     "name": "transparency_inclusion_proof",
+     "version": "v1"
+    },
+    "hash_algorithm": "sha-256",
+    "leaf_digest": {
+     "algorithm": "sha-256",
+     "canonicalization": "JSON-LD",
+     "value": "45c4949cc975ca51a6990ded2c45dc0ec6f92b3a9d547b9cd401e1c32133e1b1"
+    },
+    "leaf_index": 2,
+    "log_id": "actenon-transparency-fixture",
+    "tree_size": 4
+   },
+   "checkpoint": {
+    "contract": {
+     "name": "transparency_checkpoint",
+     "version": "v1"
+    },
+    "issued_at": "2026-06-06T12:01:00Z",
+    "log": {
+     "id": "actenon-transparency-fixture",
+     "type": "service"
+    },
+    "root_hash": {
+     "algorithm": "sha-256",
+     "encoding": "hex",
+     "value": "3e21ad68ad0b97b9bc2d70d18482fe83292288a3763f928cf94aef7d1ab66d1c"
+    },
+    "signature": {
+     "algorithm": "EdDSA",
+     "encoding": "base64url",
+     "key_id": "fixture-log-2026",
+     "value": "Nm_2TVRCysG-z9PZOjSvz5c-Jahwvucp92ZQBJBnasenIl0f71lM5c2wM9uM8JgorZonR9jbNZ9WVCut-hfXAw"
+    },
+    "tree_size": 4
+   },
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "INVALID_LEAF_DIGEST"
+   }
+  }
+ ]
+}

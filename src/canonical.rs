@@ -4,6 +4,19 @@ use serde::Serialize;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
+/// The canonicalisation identifier the Kernel stamps on newly minted proofs,
+/// receipt digests and approvals.
+pub const CANONICALIZATION_PROFILE: &str = "ACTENON-JCS-STRICT-1";
+/// The identifier carried by historical artifacts. It names the same
+/// canonicalisation rules and remains accepted.
+pub const LEGACY_CANONICALIZATION_PROFILE: &str = "RFC8785-JCS";
+
+/// Whether `label` is a canonicalisation profile accepted by the reference
+/// verifier.
+pub fn is_accepted_canonicalization(label: &str) -> bool {
+    label == CANONICALIZATION_PROFILE || label == LEGACY_CANONICALIZATION_PROFILE
+}
+
 pub fn canonicalize_bytes<T: Serialize>(value: &T) -> Result<Vec<u8>, String> {
     let value = serde_json::to_value(value).map_err(|error| error.to_string())?;
     let canonical = canonicalize_value(&value)?;

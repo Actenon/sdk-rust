@@ -8,7 +8,7 @@ use serde_json::{json, Map, Value};
 use time::format_description::well_known::Rfc3339;
 use time::OffsetDateTime;
 
-use crate::canonical::canonicalize_bytes;
+use crate::canonical::{canonicalize_bytes, is_accepted_canonicalization};
 use crate::types::{ActionHashSpec, PartyRef, SignatureSpec};
 
 pub const ISSUER_STATUS_CONTEXT: &str = "actenon.issuer-status.v1";
@@ -173,7 +173,7 @@ fn action_hash(value: Option<&Value>) -> Result<ActionHashSpec, TrustArtifactVer
     )
     .map_err(|_| error("INVALID_APPROVAL_ARTIFACT", "action_hash is invalid"))?;
     if parsed.algorithm != "sha-256"
-        || parsed.canonicalization != "RFC8785-JCS"
+        || !is_accepted_canonicalization(&parsed.canonicalization)
         || parsed.value.len() != 64
         || !parsed
             .value
@@ -182,7 +182,7 @@ fn action_hash(value: Option<&Value>) -> Result<ActionHashSpec, TrustArtifactVer
     {
         return Err(error(
             "INVALID_APPROVAL_ARTIFACT",
-            "action_hash must declare sha-256, RFC8785-JCS, and lowercase hex",
+            "action_hash must declare sha-256, a known canonicalization profile, and lowercase hex",
         ));
     }
     Ok(parsed)
@@ -612,11 +612,21 @@ pub fn verify_approval_artifact_for_action(
         ));
     }
     let parsed_action_hash = action_hash(artifact.get("action_hash"))?;
-    if expected_action_hash.is_some_and(|expected| expected != &parsed_action_hash) {
-        return Err(error(
-            "APPROVAL_ACTION_MISMATCH",
-            "approval is not bound to the expected action",
-        ));
+    if let Some(expected) = expected_action_hash {
+        let expected = action_hash(Some(&serde_json::to_value(expected).map_err(|_| {
+            error(
+                "INVALID_APPROVAL_ARTIFACT",
+                "expected action hash is invalid",
+            )
+        })?))?;
+        // Like the reference, bind by hash value: the canonicalisation label
+        // may legitimately differ between legacy and current artifacts.
+        if expected.value != parsed_action_hash.value {
+            return Err(error(
+                "APPROVAL_ACTION_MISMATCH",
+                "approval is not bound to the expected action",
+            ));
+        }
     }
     let (issued_at_raw, issued_at) = timestamp(
         artifact.get("issued_at"),
