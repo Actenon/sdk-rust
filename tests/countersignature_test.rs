@@ -7,8 +7,7 @@ use actenon_verifier_sdk::{
 use serde_json::Value;
 
 fn fixtures_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("fixtures/receipt_countersignature_v1")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("fixtures/receipt_countersignature_v1")
 }
 
 fn load_fixture(name: &str) -> Value {
