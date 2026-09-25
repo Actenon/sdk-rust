@@ -358,3 +358,21 @@ fn accepts_sub_second_timestamps() {
         "hs256/time_exp_plus_skew_plus1us_skew2000",
     ]);
 }
+
+#[test]
+fn checks_in_reference_order() {
+    // Signature first, then time, audience, target, scope, intent, tenant,
+    // subject, action and action hash, so a forged or tampered proof never
+    // learns which semantic check it would fail.
+    run_cases(&[
+        "hs256/expired_and_bad_sig",
+        "hs256/not_yet_valid_and_bad_sig",
+        "ed25519/expired_and_bad_sig",
+        "hs256/pccb_nbf_frac_half",
+        "hs256/multi_audience_and_expired",
+        "hs256/multi_target_and_tenant",
+        "hs256/multi_target_and_capability",
+        "hs256/pccb_scope_mode",
+        "hs256/issuer_signed_scope_mode_prefix",
+    ]);
+}

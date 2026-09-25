@@ -94,25 +94,13 @@ impl<V: SignatureVerifier> Verifier<V> {
             VerificationErrorCode::InvalidPccb,
         )?;
 
-        if normalized_context.now + self.clock_skew_tolerance < not_before {
-            return Err(VerificationError::new(
-                VerificationErrorCode::ProofNotYetValid,
-                "The proof is not yet valid.",
-            ));
-        }
-        if normalized_context.now - self.clock_skew_tolerance > expires_at {
-            return Err(VerificationError::new(
-                VerificationErrorCode::ProofExpired,
-                "The proof has expired.",
-            ));
-        }
-
-        // ── Signature verification (before semantic checks) ──────────────
+        // ── Signature verification (before any semantic check) ───────────
         // Security principle: verify cryptographic integrity BEFORE interpreting
-        // semantic fields. Any mutation to the signed PCCB payload (scope,
-        // action_hash, etc.) must produce SIGNATURE_INVALID, not a semantic
-        // mismatch error. This matches the Python reference verifier (steps 4-5
-        // in PCCBVerifier.verify) and the conformance vector expectations.
+        // semantic fields, including the validity window. Any mutation to the
+        // signed PCCB payload must produce SIGNATURE_INVALID, never a semantic
+        // refusal that tells a forger which check it would fail. The order of
+        // every check below matches the Python reference verifier
+        // (PCCBVerifier.verify steps 4-11).
         let unsigned_payload = canonicalize_bytes(&build_unsigned_pccb_payload(&normalized_pccb))
             .map_err(|_error| {
             VerificationError::new(
@@ -131,10 +119,28 @@ impl<V: SignatureVerifier> Verifier<V> {
         }
 
         // ── Semantic checks (after signature is verified) ────────────────
+        if normalized_context.now + self.clock_skew_tolerance < not_before {
+            return Err(VerificationError::new(
+                VerificationErrorCode::ProofNotYetValid,
+                "The proof is not yet valid.",
+            ));
+        }
+        if normalized_context.now - self.clock_skew_tolerance > expires_at {
+            return Err(VerificationError::new(
+                VerificationErrorCode::ProofExpired,
+                "The proof has expired.",
+            ));
+        }
         if normalized_pccb.audience != normalized_context.audience {
             return Err(VerificationError::new(
                 VerificationErrorCode::AudienceMismatch,
                 "The proof audience does not match this endpoint.",
+            ));
+        }
+        if normalized_pccb.target != normalized_intent.target {
+            return Err(VerificationError::new(
+                VerificationErrorCode::TargetMismatch,
+                "The proof target does not exactly match the action intent.",
             ));
         }
         if normalized_pccb.scope.mode != "exact" {
@@ -178,12 +184,6 @@ impl<V: SignatureVerifier> Verifier<V> {
             return Err(VerificationError::new(
                 VerificationErrorCode::ActionMismatch,
                 "The proof action does not exactly match the action intent.",
-            ));
-        }
-        if normalized_pccb.target != normalized_intent.target {
-            return Err(VerificationError::new(
-                VerificationErrorCode::TargetMismatch,
-                "The proof target does not exactly match the action intent.",
             ));
         }
         if normalized_pccb.action_hash.algorithm != "sha-256"
@@ -557,12 +557,13 @@ fn normalize_scope_spec(
     scope: ScopeSpec,
     field_name: &str,
 ) -> Result<ScopeSpec, VerificationError> {
-    if scope.mode != "exact" {
-        return Err(VerificationError::new(
-            VerificationErrorCode::InvalidPccb,
-            format!("{field_name}.mode must be 'exact'."),
-        ));
-    }
+    // Whether the mode is supported is a post-signature check
+    // (SCOPE_MODE_INVALID), as in the reference.
+    require_non_empty(
+        &scope.mode,
+        &format!("{field_name}.mode"),
+        VerificationErrorCode::InvalidPccb,
+    )?;
     if scope.capabilities.is_empty() {
         return Err(VerificationError::new(
             VerificationErrorCode::InvalidPccb,
