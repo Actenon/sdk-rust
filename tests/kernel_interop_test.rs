@@ -376,3 +376,17 @@ fn checks_in_reference_order() {
         "hs256/issuer_signed_scope_mode_prefix",
     ]);
 }
+
+#[test]
+fn does_not_reorder_signed_capabilities() {
+    // scope.capabilities is signed in the order presented. Sorting it before
+    // verification let a reordered proof verify.
+    run_cases(&[
+        "hs256/issuer_unsorted_caps",
+        "hs256/issuer_sorted_caps",
+        "hs256/reordered_caps_presented",
+        "hs256/dup_caps_presented",
+        "ed25519/reordered_caps_presented",
+        "ed25519/issuer_unsorted_caps",
+    ]);
+}

@@ -571,12 +571,17 @@ fn normalize_scope_spec(
         ));
     }
 
-    let mut capabilities = scope.capabilities;
-    capabilities.sort();
+    // Capabilities are signed in the order presented; never reorder them.
+    if scope.capabilities.iter().any(String::is_empty) {
+        return Err(VerificationError::new(
+            VerificationErrorCode::InvalidPccb,
+            format!("{field_name}.capabilities must contain non-empty strings."),
+        ));
+    }
 
     Ok(ScopeSpec {
         mode: scope.mode,
-        capabilities,
+        capabilities: scope.capabilities,
         single_use: scope.single_use,
         resource_selectors: scope.resource_selectors,
         parameter_constraints: scope.parameter_constraints,
