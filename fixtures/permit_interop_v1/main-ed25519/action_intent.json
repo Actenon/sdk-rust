@@ -1,0 +1,36 @@
+{
+  "action": {
+    "capability": "payment.refund",
+    "name": "payment.refund",
+    "parameters": {
+      "amount": "0.0",
+      "amount_minor": 2500,
+      "currency": "USD",
+      "invoice_id": "INV-7831"
+    }
+  },
+  "contract": {
+    "name": "action_intent",
+    "version": "v1"
+  },
+  "expires_at": "2026-09-26T17:32:34.865685Z",
+  "intent_id": "act_d08f00bca54d46be",
+  "issued_at": "2026-09-25T17:32:34.866651Z",
+  "metadata": {
+    "authority_ref": "authref_41a057b7aa3d345b8477813b4f67ea6f",
+    "execution_mode": "brokered",
+    "grant_id": "grant_b9dfb037403a499e",
+    "operation_id": "act_d08f00bca54d46be"
+  },
+  "requester": {
+    "id": "hero-agent",
+    "type": "agent"
+  },
+  "target": {
+    "resource_id": "stripe",
+    "resource_type": "tool"
+  },
+  "tenant": {
+    "tenant_id": "default"
+  }
+}

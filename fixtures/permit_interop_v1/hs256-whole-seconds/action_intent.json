@@ -1,0 +1,36 @@
+{
+  "action": {
+    "capability": "payment.refund",
+    "name": "payment.refund",
+    "parameters": {
+      "amount": "0.0",
+      "amount_minor": 2500,
+      "currency": "USD",
+      "invoice_id": "INV-7831"
+    }
+  },
+  "contract": {
+    "name": "action_intent",
+    "version": "v1"
+  },
+  "expires_at": "2026-09-26T17:35:31Z",
+  "intent_id": "act_hmac000000000001",
+  "issued_at": "2026-09-25T17:35:31Z",
+  "metadata": {
+    "authority_ref": "authref_57660ed7a60dac7a3229194e9edd4dee",
+    "execution_mode": "brokered",
+    "grant_id": "grant_816a0f48df6644ca",
+    "operation_id": "act_hmac000000000001"
+  },
+  "requester": {
+    "id": "hmac-agent",
+    "type": "agent"
+  },
+  "target": {
+    "resource_id": "stripe",
+    "resource_type": "tool"
+  },
+  "tenant": {
+    "tenant_id": "default"
+  }
+}

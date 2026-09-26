@@ -16,8 +16,8 @@ pub use countersignature::{
 };
 pub use errors::{VerificationError, VerificationErrorCode};
 pub use signers::{
-    build_local_proof_verifier, HmacSha256Verifier, SignatureVerifier, LOCAL_PROOF_KEY_ID,
-    LOCAL_PROOF_SECRET,
+    build_local_proof_verifier, parse_ed25519_public_jwk, Ed25519Verifier, HmacSha256Verifier,
+    SignatureVerifier, LOCAL_PROOF_KEY_ID, LOCAL_PROOF_SECRET,
 };
 pub use transparency::{
     verify_checkpoint_signature, verify_consistency, verify_countersignature_inclusion,
