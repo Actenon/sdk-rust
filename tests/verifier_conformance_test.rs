@@ -48,8 +48,7 @@ struct Manifest {
 }
 
 fn vector_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("fixtures/verifier_sdk_v1")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("fixtures/verifier_sdk_v1")
 }
 
 fn load_value(name: &str) -> Value {

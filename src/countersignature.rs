@@ -9,7 +9,9 @@ use serde_json::{json, Map, Value};
 use time::format_description::well_known::Rfc3339;
 use time::OffsetDateTime;
 
-use crate::canonical::{canonicalize_bytes, sha256_hex};
+use crate::canonical::{
+    canonicalize_bytes, is_accepted_canonicalization, sha256_hex, CANONICALIZATION_PROFILE,
+};
 use crate::types::PartyRef;
 
 pub const COUNTERSIGNATURE_CONTEXT: &str = "actenon.receipt-countersignature.v1";
@@ -113,7 +115,7 @@ fn parse_digest(
         .to_string(),
     };
     if digest.algorithm != "sha-256"
-        || digest.canonicalization != "RFC8785-JCS"
+        || !is_accepted_canonicalization(&digest.canonicalization)
         || digest.value.len() != 64
         || !digest
             .value
@@ -122,7 +124,7 @@ fn parse_digest(
     {
         return Err(error(
             "INVALID_RECEIPT_DIGEST",
-            "receipt digest must declare sha-256, RFC8785-JCS, and a lowercase 64-character hex value",
+            "receipt digest must declare sha-256, a known canonicalization profile, and a lowercase 64-character hex value",
         ));
     }
     Ok(digest)
@@ -167,7 +169,7 @@ fn resolve_receipt_digest(
     })?;
     Ok(ReceiptDigest {
         algorithm: "sha-256".to_string(),
-        canonicalization: "RFC8785-JCS".to_string(),
+        canonicalization: CANONICALIZATION_PROFILE.to_string(),
         value,
     })
 }
@@ -255,7 +257,9 @@ pub fn verify_countersignature(
             .ok_or_else(|| error("INVALID_COUNTERSIGNATURE", "receipt_digest is required"))?,
         "countersignature.receipt_digest",
     )?;
-    if observed_digest != expected_digest {
+    // Like the reference, bind by digest value: the canonicalisation label may
+    // legitimately differ between legacy and current artifacts.
+    if observed_digest.value != expected_digest.value {
         return Err(error(
             "RECEIPT_DIGEST_MISMATCH",
             "counter-signature receipt digest does not match the supplied receipt or digest",

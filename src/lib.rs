@@ -7,6 +7,9 @@ mod trust_artifacts;
 mod types;
 mod verifier;
 
+pub use canonical::{
+    is_accepted_canonicalization, CANONICALIZATION_PROFILE, LEGACY_CANONICALIZATION_PROFILE,
+};
 pub use countersignature::{
     verify_countersignature, CounterSignatureVerificationError, ReceiptDigest,
     VerifiedCounterSignature, COUNTERSIGNATURE_CONTEXT, COUNTERSIGNATURE_KEY_USE,
