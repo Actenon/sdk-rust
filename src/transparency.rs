@@ -261,7 +261,9 @@ fn parse_checkpoint(value: &Value) -> Result<ParsedCheckpoint, TransparencyVerif
         "checkpoint.contract",
         "INVALID_CHECKPOINT",
     )?;
-    if contract.get("name").and_then(Value::as_str) != Some("transparency_checkpoint")
+    // The reference compares the contract object exactly.
+    if contract.len() != 2
+        || contract.get("name").and_then(Value::as_str) != Some("transparency_checkpoint")
         || contract.get("version").and_then(Value::as_str) != Some("v1")
     {
         return Err(error(
@@ -608,7 +610,9 @@ pub fn verify_inclusion(
         "inclusion_proof.contract",
         "INVALID_INCLUSION_PROOF",
     )?;
-    if contract.get("name").and_then(Value::as_str) != Some("transparency_inclusion_proof")
+    // The reference compares the contract object exactly.
+    if contract.len() != 2
+        || contract.get("name").and_then(Value::as_str) != Some("transparency_inclusion_proof")
         || contract.get("version").and_then(Value::as_str) != Some("v1")
         || proof.get("hash_algorithm").and_then(Value::as_str) != Some("sha-256")
     {
@@ -726,7 +730,9 @@ pub fn verify_consistency(
         "consistency_proof.contract",
         "INVALID_CONSISTENCY_PROOF",
     )?;
-    if contract.get("name").and_then(Value::as_str) != Some("transparency_consistency_proof")
+    // The reference compares the contract object exactly.
+    if contract.len() != 2
+        || contract.get("name").and_then(Value::as_str) != Some("transparency_consistency_proof")
         || contract.get("version").and_then(Value::as_str) != Some("v1")
         || proof.get("hash_algorithm").and_then(Value::as_str) != Some("sha-256")
     {

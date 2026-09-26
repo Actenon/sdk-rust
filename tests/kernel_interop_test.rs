@@ -119,38 +119,38 @@ fn run_case(document: &Value, case: &Value) -> Result<(), String> {
             case["clock_skew_tolerance_ms"].as_i64().unwrap(),
         ))
         .unwrap();
-    let context = verifier
-        .build_context(VerificationContextInput {
-            request_id: context["request_id"].as_str().unwrap().to_string(),
-            audience: AudienceRef {
-                r#type: context["audience"]["type"].as_str().unwrap().to_string(),
-                id: context["audience"]["id"].as_str().unwrap().to_string(),
-                uri: context["audience"]["uri"].as_str().map(str::to_string),
-            },
-            now: OffsetDateTime::parse(context["now"].as_str().unwrap(), &Rfc3339).unwrap(),
-            scope_capabilities: context["scope_capabilities"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(|value| value.as_str().unwrap().to_string())
-                .collect(),
-            parameter_constraints: context["parameter_constraints"]
-                .as_object()
-                .unwrap()
-                .clone(),
-            resource_selectors: context["resource_selectors"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(|value| value.as_object().unwrap().clone())
-                .collect(),
-        })
-        .unwrap();
-    let result = verifier.verify_json(
-        case["intent"].as_str().unwrap().as_bytes(),
-        case["pccb"].as_str().unwrap().as_bytes(),
-        context,
-    );
+    let context = verifier.build_context(VerificationContextInput {
+        request_id: context["request_id"].as_str().unwrap().to_string(),
+        audience: AudienceRef {
+            r#type: context["audience"]["type"].as_str().unwrap().to_string(),
+            id: context["audience"]["id"].as_str().unwrap().to_string(),
+            uri: context["audience"]["uri"].as_str().map(str::to_string),
+        },
+        now: OffsetDateTime::parse(context["now"].as_str().unwrap(), &Rfc3339).unwrap(),
+        scope_capabilities: context["scope_capabilities"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|value| value.as_str().unwrap().to_string())
+            .collect(),
+        parameter_constraints: context["parameter_constraints"]
+            .as_object()
+            .unwrap()
+            .clone(),
+        resource_selectors: context["resource_selectors"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|value| value.as_object().unwrap().clone())
+            .collect(),
+    });
+    let result = context.and_then(|context| {
+        verifier.verify_json(
+            case["intent"].as_str().unwrap().as_bytes(),
+            case["pccb"].as_str().unwrap().as_bytes(),
+            context,
+        )
+    });
     let (outcome, reason_code) = expectation(case);
     match (outcome.as_str(), result) {
         ("verified", Ok(_)) => Ok(()),
@@ -438,4 +438,17 @@ fn enforces_action_intent_semantics_and_escrow_binding() {
         "hs256/pccb_escrow_space",
         "hs256/pccb_escrow_empty",
     ]);
+}
+
+/// Every kernel_interop_v1 case: the SDK must reach the reference's
+/// decision (or its documented stricter override) and must never verify a
+/// proof the reference refuses.
+#[test]
+fn kernel_interop_vectors() {
+    run_cases(&[]);
+}
+
+#[test]
+fn kernel_interop_artifact_vectors() {
+    run_artifact_cases(&[]);
 }

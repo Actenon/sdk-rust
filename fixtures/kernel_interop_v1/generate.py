@@ -351,6 +351,11 @@ _GO_CASE_FOLD = (
     "that match a field name only case-insensitively instead of acting on a value the reference ignores."
 )
 
+_RUST_NUMBERS = (
+    "serde_json (without arbitrary_precision) parses integers outside i64::MIN..=u64::MAX, and -0, "
+    "as floating point, which the canonicaliser refuses; the reference accepts them as integers."
+)
+
 SDK_OVERRIDES: dict = {
     **{case: _stricter(_EMPTY_OPTIONAL) for case in (
         "intent_target_uri_empty", "intent_requester_dn_empty_vs_present", "pccb_intent_id_empty",
@@ -362,8 +367,8 @@ SDK_OVERRIDES: dict = {
     "intent_requester_dn_int": _stricter(_NOT_A_STRING),
     "issuer_signed_dn_int": _stricter(_NOT_A_STRING),
     "intent_tenant_space": _stricter(_BLANK_ID),
-    "pccb_nbf_lower_t": _stricter(_RFC3339),
-    "pccb_nbf_space": _stricter(_RFC3339),
+    "pccb_nbf_lower_t": _stricter(_RFC3339, sdks=("go",)),
+    "pccb_nbf_space": _stricter(_RFC3339, sdks=("go",)),
     "pccb_nbf_no_seconds": _stricter(_RFC3339),
     "sig_padded": _stricter(_BASE64URL, "SIGNATURE_INVALID"),
     "sig_std_alphabet": _stricter(_BASE64URL, "SIGNATURE_INVALID"),
@@ -373,6 +378,10 @@ SDK_OVERRIDES: dict = {
     "case_Audience_extra": _stricter(_GO_CASE_FOLD, sdks=("go",)),
     "case_Target_intent_extra": _stricter(_GO_CASE_FOLD, sdks=("go",)),
     "case_target_resource_ID_extra": _stricter(_GO_CASE_FOLD, sdks=("go",)),
+    **{case: _stricter(_RUST_NUMBERS, sdks=("rust",)) for case in (
+        "minted_bigger_ints", "neg_zero_both",
+    )},
+    "neg_zero_intent": _stricter(_RUST_NUMBERS, "ACTION_MISMATCH", sdks=("rust",)),
 }
 
 

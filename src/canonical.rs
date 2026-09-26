@@ -149,8 +149,10 @@ mod tests {
                 continue;
             }
             if case["expected_pass"].as_bool().unwrap() {
-                let output =
-                    String::from_utf8(output.expect(case["id"].as_str().unwrap())).unwrap();
+                let output = String::from_utf8(
+                    output.unwrap_or_else(|error| panic!("{}: {error}", case["id"])),
+                )
+                .unwrap();
                 if case["generator"].is_null() {
                     assert_eq!(output, case["expected_output"].as_str().unwrap());
                 }
