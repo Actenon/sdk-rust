@@ -39,3 +39,8 @@ pub use types::{
 pub use verifier::{
     parse_action_intent_json, parse_pccb_json, Verifier, DEFAULT_CLOCK_SKEW_TOLERANCE,
 };
+
+/// Compiles the README's code blocks as doctests.
+#[doc = include_str!("../README.md")]
+#[cfg(doctest)]
+pub struct ReadmeDoctests;
