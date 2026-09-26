@@ -390,3 +390,52 @@ fn does_not_reorder_signed_capabilities() {
         "ed25519/issuer_unsorted_caps",
     ]);
 }
+
+#[test]
+fn parses_json_like_the_reference_ingress() {
+    // The reference's JSON ingress refuses duplicate members and oversized
+    // documents; serde_json keeps the last duplicate, so without these
+    // checks the verifier could act on a different document than a
+    // first-wins consumer of the same bytes. Present-but-empty optional
+    // strings are refused (schemas require minLength >= 1), as in sdk-go.
+    run_cases(&[
+        "hs256/dup_param_key_same",
+        "hs256/dup_param_key_diff_last_signed",
+        "hs256/dup_param_key_diff_first_signed",
+        "hs256/dup_top_audience_pccb",
+        "hs256/dup_top_audience_pccb_signed_last",
+        "hs256/intent_tenant_attr_null",
+        "hs256/pccb_scope_single_use_str",
+        "hs256/pccb_escrow_null",
+        "hs256/intent_requester_dn_null",
+        "hs256/pccb_intent_id_null",
+        "hs256/depth_params_124",
+        "hs256/depth_params_125",
+        "hs256/depth_params_128",
+        "hs256/depth_params_200",
+        "hs256/pccb_nbf_lower_z",
+        "hs256/pccb_intent_id_empty",
+        "hs256/issuer_signed_intent_id_empty",
+        "hs256/issuer_signed_escrow_empty",
+        "hs256/intent_target_uri_empty",
+        "hs256/issuer_signed_dn_empty",
+    ]);
+}
+
+#[test]
+fn enforces_action_intent_semantics_and_escrow_binding() {
+    // The reference's intake refuses a non-positive validity window and an
+    // action without parameters; escrow_reference is signed whenever
+    // escrow_id is present, with single_use taken from scope.single_use.
+    run_cases(&[
+        "hs256/issuer_signed_window_equal",
+        "hs256/issuer_signed_window_inverted",
+        "hs256/issuer_signed_empty_params",
+        "ed25519/issuer_signed_empty_params",
+        "hs256/minted_escrow",
+        "hs256/minted_escrow_single_use_tamper",
+        "hs256/minted_escrow_removed",
+        "hs256/pccb_escrow_space",
+        "hs256/pccb_escrow_empty",
+    ]);
+}

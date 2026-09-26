@@ -228,11 +228,23 @@ impl<V: SignatureVerifier> Verifier<V> {
     }
 }
 
+/// Largest JSON document accepted, as by the reference's JSON ingress.
+const MAX_JSON_INPUT_BYTES: usize = 1_048_576;
+
 fn decode_json<T: DeserializeOwned>(
     raw: &[u8],
     code: VerificationErrorCode,
     artifact_name: &str,
 ) -> Result<T, VerificationError> {
+    // The reference's ingress (loads_no_duplicate_keys) refuses oversized
+    // documents and duplicate object members. serde_json silently keeps the
+    // last duplicate, so check before decoding.
+    if raw.len() > MAX_JSON_INPUT_BYTES || reject_duplicate_members(raw).is_err() {
+        return Err(VerificationError::new(
+            code,
+            format!("failed to decode {artifact_name} JSON payload."),
+        ));
+    }
     let mut deserializer = Deserializer::from_slice(raw);
     let value = T::deserialize(&mut deserializer).map_err(|_error| {
         VerificationError::new(
@@ -280,6 +292,11 @@ fn parse_timestamp(
             format!("{field_name} must be an RFC3339 timestamp string."),
         )
     };
+    // The reference (datetime.fromisoformat after replacing "Z") refuses a
+    // lowercase "z" designator, which the time crate accepts.
+    if raw.contains('z') {
+        return Err(invalid());
+    }
     let parsed = OffsetDateTime::parse(raw, &Rfc3339)
         .map_err(|_error| invalid())?
         .to_offset(UtcOffset::UTC);
@@ -352,6 +369,39 @@ fn normalize_action_intent(intent: ActionIntent) -> Result<ActionIntent, Verific
         "action_intent.target",
         VerificationErrorCode::InvalidIntent,
     )?;
+    reject_empty_optional(
+        &intent.idempotency_key,
+        "action_intent.idempotency_key",
+        VerificationErrorCode::InvalidIntent,
+    )?;
+    reject_empty_optional(
+        &intent.justification,
+        "action_intent.justification",
+        VerificationErrorCode::InvalidIntent,
+    )?;
+    // Semantic rules of the reference's Action Intent intake.
+    let issued_at = parse_timestamp(
+        &intent.issued_at,
+        "action_intent.issued_at",
+        VerificationErrorCode::InvalidIntent,
+    )?;
+    let expires_at = parse_timestamp(
+        &intent.expires_at,
+        "action_intent.expires_at",
+        VerificationErrorCode::InvalidIntent,
+    )?;
+    if expires_at <= issued_at {
+        return Err(VerificationError::new(
+            VerificationErrorCode::InvalidIntent,
+            "action_intent.expires_at must be later than issued_at.",
+        ));
+    }
+    if action.parameters.is_empty() {
+        return Err(VerificationError::new(
+            VerificationErrorCode::InvalidIntent,
+            "action_intent.action.parameters must contain at least one value.",
+        ));
+    }
 
     Ok(ActionIntent {
         contract: crate::types::Contract {
@@ -360,16 +410,8 @@ fn normalize_action_intent(intent: ActionIntent) -> Result<ActionIntent, Verific
         },
         intent_id: intent.intent_id,
         idempotency_key: intent.idempotency_key,
-        issued_at: normalize_timestamp(
-            &intent.issued_at,
-            "action_intent.issued_at",
-            VerificationErrorCode::InvalidIntent,
-        )?,
-        expires_at: normalize_timestamp(
-            &intent.expires_at,
-            "action_intent.expires_at",
-            VerificationErrorCode::InvalidIntent,
-        )?,
+        issued_at: format_timestamp(issued_at),
+        expires_at: format_timestamp(expires_at),
         tenant,
         requester,
         action,
@@ -399,6 +441,12 @@ fn normalize_pccb(pccb: PCCB) -> Result<PCCB, VerificationError> {
         "pccb.nonce",
         VerificationErrorCode::InvalidPccb,
     )?;
+    reject_empty_optional(
+        &pccb.intent_id,
+        "pccb.intent_id",
+        VerificationErrorCode::InvalidPccb,
+    )?;
+    let single_use = pccb.scope.single_use;
 
     Ok(PCCB {
         contract: crate::types::Contract {
@@ -455,7 +503,7 @@ fn normalize_pccb(pccb: PCCB) -> Result<PCCB, VerificationError> {
         scope: normalize_scope_spec(pccb.scope, "pccb.scope")?,
         nonce: pccb.nonce,
         action_hash: normalize_action_hash_spec(pccb.action_hash, "pccb.action_hash")?,
-        escrow_reference: normalize_escrow_reference(pccb.escrow_reference),
+        escrow_reference: normalize_escrow_reference(pccb.escrow_reference, single_use)?,
         signature: normalize_signature_spec(pccb.signature, "pccb.signature")?,
         extensions: pccb.extensions,
     })
@@ -508,6 +556,11 @@ fn normalize_party_ref(
 ) -> Result<PartyRef, VerificationError> {
     require_non_empty(&party.r#type, &format!("{field_name}.type"), code)?;
     require_non_empty(&party.id, &format!("{field_name}.id"), code)?;
+    reject_empty_optional(
+        &party.display_name,
+        &format!("{field_name}.display_name"),
+        code,
+    )?;
     Ok(party)
 }
 
@@ -518,6 +571,7 @@ fn normalize_audience_ref(
 ) -> Result<AudienceRef, VerificationError> {
     require_non_empty(&audience.r#type, &format!("{field_name}.type"), code)?;
     require_non_empty(&audience.id, &format!("{field_name}.id"), code)?;
+    reject_empty_optional(&audience.uri, &format!("{field_name}.uri"), code)?;
     Ok(audience)
 }
 
@@ -550,6 +604,7 @@ fn normalize_target_ref(
         &format!("{field_name}.resource_id"),
         code,
     )?;
+    reject_empty_optional(&target.uri, &format!("{field_name}.uri"), code)?;
     Ok(target)
 }
 
@@ -637,10 +692,44 @@ fn normalize_signature_spec(
     Ok(signature)
 }
 
+/// Present-but-empty optional strings are refused: the schemas require
+/// minLength >= 1, and sdk-go (which cannot tell "" from absent) refuses
+/// them too, so both SDKs bind the same documents.
+fn reject_empty_optional(
+    value: &Option<String>,
+    field_name: &str,
+    code: VerificationErrorCode,
+) -> Result<(), VerificationError> {
+    if value.as_deref() == Some("") {
+        return Err(VerificationError::new(
+            code,
+            format!("{field_name} must not be an empty string."),
+        ));
+    }
+    Ok(())
+}
+
+/// Mirrors the reference: escrow_reference is part of the signed payload
+/// whenever escrow_id is present, and its single_use is always
+/// scope.single_use (the presented escrow_reference.single_use is not
+/// signed, so it is never surfaced).
 fn normalize_escrow_reference(
     reference: Option<crate::types::EscrowReference>,
-) -> Option<crate::types::EscrowReference> {
-    reference.filter(|value| !value.escrow_id.trim().is_empty())
+    single_use: bool,
+) -> Result<Option<crate::types::EscrowReference>, VerificationError> {
+    let Some(reference) = reference else {
+        return Ok(None);
+    };
+    if reference.escrow_id.is_empty() {
+        return Err(VerificationError::new(
+            VerificationErrorCode::InvalidPccb,
+            "pccb.escrow_reference.escrow_id must be a non-empty string.",
+        ));
+    }
+    Ok(Some(crate::types::EscrowReference {
+        escrow_id: reference.escrow_id,
+        single_use: Some(single_use),
+    }))
 }
 
 fn build_action_hash_input(intent: &ActionIntent) -> Value {
@@ -699,4 +788,64 @@ fn build_unsigned_pccb_payload(pccb: &PCCB) -> Value {
     }
 
     payload
+}
+
+/// Walks a JSON document and fails on any object with a repeated member name.
+fn reject_duplicate_members(raw: &[u8]) -> Result<(), serde_json::Error> {
+    struct NoDuplicates;
+
+    impl<'de> serde::de::DeserializeSeed<'de> for NoDuplicates {
+        type Value = ();
+
+        fn deserialize<D: serde::Deserializer<'de>>(self, deserializer: D) -> Result<(), D::Error> {
+            deserializer.deserialize_any(self)
+        }
+    }
+
+    impl<'de> serde::de::Visitor<'de> for NoDuplicates {
+        type Value = ();
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("a JSON value without duplicate object members")
+        }
+
+        fn visit_bool<E>(self, _: bool) -> Result<(), E> {
+            Ok(())
+        }
+        fn visit_i64<E>(self, _: i64) -> Result<(), E> {
+            Ok(())
+        }
+        fn visit_u64<E>(self, _: u64) -> Result<(), E> {
+            Ok(())
+        }
+        fn visit_f64<E>(self, _: f64) -> Result<(), E> {
+            Ok(())
+        }
+        fn visit_str<E>(self, _: &str) -> Result<(), E> {
+            Ok(())
+        }
+        fn visit_unit<E>(self) -> Result<(), E> {
+            Ok(())
+        }
+
+        fn visit_seq<A: serde::de::SeqAccess<'de>>(self, mut seq: A) -> Result<(), A::Error> {
+            while seq.next_element_seed(NoDuplicates)?.is_some() {}
+            Ok(())
+        }
+
+        fn visit_map<A: serde::de::MapAccess<'de>>(self, mut map: A) -> Result<(), A::Error> {
+            let mut seen = std::collections::HashSet::new();
+            while let Some(key) = map.next_key::<String>()? {
+                if !seen.insert(key) {
+                    return Err(serde::de::Error::custom("duplicate JSON object member"));
+                }
+                map.next_value_seed(NoDuplicates)?;
+            }
+            Ok(())
+        }
+    }
+
+    let mut deserializer = Deserializer::from_slice(raw);
+    serde::de::DeserializeSeed::deserialize(NoDuplicates, &mut deserializer)?;
+    deserializer.end()
 }
