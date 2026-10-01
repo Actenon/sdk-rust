@@ -1,0 +1,10 @@
+# Files vendored byte-for-byte from github.com/Actenon/actenon-kernel at the
+# commit in KERNEL_PIN that the kernel's hash lock (conformance/vector-lock.json,
+# copied verbatim to kernel_vector_lock.json) does NOT cover.
+# vendored_kernel_vectors_match_kernel_lock requires each to stay absent from the
+# lock; CI compares each byte-for-byte with the kernel tree at the pin.
+# Format: <path under fixtures/> <path in actenon-kernel>
+canonicalization_strict_v1/cases.json actenon/conformance/vectors/canonicalization_strict_v1/cases.json
+canonicalization_strict_v1/profile.json actenon/conformance/vectors/canonicalization_strict_v1/profile.json
+trust_artifacts_v1/README.md conformance/vectors/trust_artifacts_v1/README.md
+verifier_sdk_v1/README.md actenon/conformance/vectors/verifier_sdk_v1/README.md

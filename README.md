@@ -106,10 +106,17 @@ proofs signed with the public development key use
 
 `cargo test` runs, from [`fixtures/`](fixtures/):
 
-- the Kernel's `verifier_sdk_v1` (16 cases), `canonicalization_strict_v1`,
+- the Kernel's `verifier_sdk_v1` (16 `cases.json` cases and 6
+  fractional-second `timestamp_cases.json` cases), `canonicalization_strict_v1`,
   `receipt_countersignature_v1`, `transparency_log_v1` and
-  `trust_artifacts_v1` vectors, copied byte-for-byte (they match the
-  Kernel's `conformance/vector-lock.json`);
+  `trust_artifacts_v1` vectors, copied byte-for-byte from the Kernel commit
+  in `fixtures/KERNEL_PIN`. Every file the Kernel's
+  `conformance/vector-lock.json` records for those suites must be vendored
+  with that sha256 (checked offline against the verbatim copy
+  `fixtures/kernel_vector_lock.json`, and in CI against the lock downloaded at
+  the pin). `canonicalization_strict_v1` and the suite READMEs are not in the
+  Kernel's lock (`fixtures/KERNEL_UNLOCKED`); CI compares them byte-for-byte
+  with the Kernel tree at the pin instead;
 - `kernel_interop_v1`: 347 proof and 21 trust-artifact differential cases
   minted and decided by the Python reference verifier (see its README);
 - `permit_interop_v1`: real proofs minted through actenon-permit.
