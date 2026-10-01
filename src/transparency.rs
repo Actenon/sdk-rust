@@ -169,8 +169,9 @@ fn decode_hex_32(
         ));
     }
     let mut decoded = [0_u8; 32];
-    for (index, pair) in value.as_bytes().chunks_exact(2).enumerate() {
-        decoded[index] = (hex_nibble(pair[0]) << 4) | hex_nibble(pair[1]);
+    let (pairs, _) = value.as_bytes().as_chunks::<2>();
+    for (index, [high, low]) in pairs.iter().enumerate() {
+        decoded[index] = (hex_nibble(*high) << 4) | hex_nibble(*low);
     }
     Ok(decoded)
 }
