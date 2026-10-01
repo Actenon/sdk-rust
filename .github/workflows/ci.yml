@@ -39,6 +39,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
+          components: clippy
+      # Clippy's default lints differ by release (1.88 flags
+      # uninlined_format_args, current stable does not); the lint job covers
+      # stable, this covers the MSRV.
+      - if: matrix.rust == '1.88'
+        run: cargo clippy --all-targets --locked -- -D warnings
       # Runs the conformance, differential and Permit interop vectors and
       # the README quickstart (doctest).
       - run: cargo test --all-targets --locked
