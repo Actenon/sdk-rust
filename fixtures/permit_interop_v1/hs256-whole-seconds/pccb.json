@@ -1,0 +1,59 @@
+{
+  "action": {
+    "capability": "payment.refund",
+    "name": "payment.refund",
+    "parameters": {
+      "amount": "0.0",
+      "amount_minor": 2500,
+      "currency": "USD",
+      "invoice_id": "INV-7831"
+    }
+  },
+  "action_hash": {
+    "algorithm": "sha-256",
+    "canonicalization": "RFC8785-JCS",
+    "value": "ad2949f9eb645a68fc9a878b83375b72b613a687c7b1286657dfbc1320308e93"
+  },
+  "audience": {
+    "id": "actenon-permit-gateway",
+    "type": "service"
+  },
+  "contract": {
+    "name": "pccb",
+    "version": "v1"
+  },
+  "expires_at": "2026-09-26T17:35:31Z",
+  "intent_id": "act_hmac000000000001",
+  "issued_at": "2026-09-25T17:35:31Z",
+  "issuer": {
+    "id": "actenon-permit",
+    "type": "service"
+  },
+  "nonce": "On3ZuGwbxDt2GjhguszoXO6xsV-fxKa7",
+  "not_before": "2026-09-25T17:35:31Z",
+  "pccb_id": "pccb_dc33a9aa9fce4d709c2303e16539754c",
+  "scope": {
+    "capabilities": [
+      "payment.refund"
+    ],
+    "mode": "exact",
+    "single_use": true
+  },
+  "signature": {
+    "algorithm": "HS256",
+    "encoding": "base64url",
+    "key_id": "local-proof-v1",
+    "value": "ZzJTlrqy7bjsK0fHDj0Vf5aosGSMPysdcDcmsC9pbzE"
+  },
+  "subject": {
+    "id": "hmac-agent",
+    "type": "agent"
+  },
+  "target": {
+    "resource_id": "stripe",
+    "resource_type": "tool"
+  },
+  "tenant": {
+    "tenant_id": "default"
+  }
+}

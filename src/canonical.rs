@@ -34,7 +34,7 @@ pub fn canonicalize_bytes<T: Serialize>(value: &T) -> Result<Vec<u8>, String> {
 pub fn sha256_hex<T: Serialize>(value: &T) -> Result<String, String> {
     let bytes = canonicalize_bytes(value)?;
     let digest = Sha256::digest(bytes);
-    Ok(format!("{:x}", digest))
+    Ok(format!("{digest:x}"))
 }
 
 fn canonicalize_value(value: &Value) -> Result<String, String> {
@@ -149,8 +149,10 @@ mod tests {
                 continue;
             }
             if case["expected_pass"].as_bool().unwrap() {
-                let output =
-                    String::from_utf8(output.expect(case["id"].as_str().unwrap())).unwrap();
+                let output = String::from_utf8(
+                    output.unwrap_or_else(|error| panic!("{}: {error}", case["id"])),
+                )
+                .unwrap();
                 if case["generator"].is_null() {
                     assert_eq!(output, case["expected_output"].as_str().unwrap());
                 }

@@ -1,0 +1,59 @@
+{
+  "action": {
+    "capability": "payment.refund",
+    "name": "payment.refund",
+    "parameters": {
+      "amount": "0.0",
+      "amount_minor": 2500,
+      "currency": "USD",
+      "invoice_id": "INV-7831"
+    }
+  },
+  "action_hash": {
+    "algorithm": "sha-256",
+    "canonicalization": "ACTENON-JCS-STRICT-1",
+    "value": "2cc091d3c2b100418c753a2ad2385c8cb70e1fbb93a867041f4c2e404d786f70"
+  },
+  "audience": {
+    "id": "actenon-permit-gateway",
+    "type": "service"
+  },
+  "contract": {
+    "name": "pccb",
+    "version": "v1"
+  },
+  "expires_at": "2026-09-26T17:32:34.865685Z",
+  "intent_id": "act_d08f00bca54d46be",
+  "issued_at": "2026-09-25T17:32:34.867470Z",
+  "issuer": {
+    "id": "actenon-permit",
+    "type": "service"
+  },
+  "nonce": "vExqS4-NA5Xv1BxUn4SsjQ_chrTCagLN",
+  "not_before": "2026-09-25T17:32:34.867470Z",
+  "pccb_id": "pccb_d7444044d94443f4a340531b0235c9a0",
+  "scope": {
+    "capabilities": [
+      "payment.refund"
+    ],
+    "mode": "exact",
+    "single_use": true
+  },
+  "signature": {
+    "algorithm": "EdDSA",
+    "encoding": "base64url",
+    "key_id": "ed25519-72f9c88b4204",
+    "value": "Vx8xBlPiFHom7J2VYadbqfZvlzDMwZLT-ZdeFOSKocIbZuBQisurXGALa0D1fyv5MakPkGXwfOMFXybKKP_ZDg"
+  },
+  "subject": {
+    "id": "hero-agent",
+    "type": "agent"
+  },
+  "target": {
+    "resource_id": "stripe",
+    "resource_type": "tool"
+  },
+  "tenant": {
+    "tenant_id": "default"
+  }
+}

@@ -1,0 +1,157 @@
+{
+ "cases": [
+  {
+   "id": "ed25519-whole-seconds/action_intent.json",
+   "directory": "ed25519-whole-seconds",
+   "intent": "action_intent.json",
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "ed25519-whole-seconds/action_intent_widened.json",
+   "directory": "ed25519-whole-seconds",
+   "intent": "action_intent_widened.json",
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "ACTION_MISMATCH"
+   }
+  },
+  {
+   "id": "hs256-legacy-label/action_intent.json",
+   "directory": "hs256-legacy-label",
+   "intent": "action_intent.json",
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "hs256-legacy-label/action_intent_widened.json",
+   "directory": "hs256-legacy-label",
+   "intent": "action_intent_widened.json",
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "ACTION_MISMATCH"
+   }
+  },
+  {
+   "id": "hs256-us-123450/action_intent.json",
+   "directory": "hs256-us-123450",
+   "intent": "action_intent.json",
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "hs256-us-123450/action_intent_widened.json",
+   "directory": "hs256-us-123450",
+   "intent": "action_intent_widened.json",
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "ACTION_MISMATCH"
+   }
+  },
+  {
+   "id": "hs256-us-123456/action_intent.json",
+   "directory": "hs256-us-123456",
+   "intent": "action_intent.json",
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "hs256-us-123456/action_intent_widened.json",
+   "directory": "hs256-us-123456",
+   "intent": "action_intent_widened.json",
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "ACTION_MISMATCH"
+   }
+  },
+  {
+   "id": "hs256-us-500000/action_intent.json",
+   "directory": "hs256-us-500000",
+   "intent": "action_intent.json",
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "hs256-us-500000/action_intent_widened.json",
+   "directory": "hs256-us-500000",
+   "intent": "action_intent_widened.json",
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "ACTION_MISMATCH"
+   }
+  },
+  {
+   "id": "hs256-whole-seconds/action_intent.json",
+   "directory": "hs256-whole-seconds",
+   "intent": "action_intent.json",
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "hs256-whole-seconds/action_intent_widened.json",
+   "directory": "hs256-whole-seconds",
+   "intent": "action_intent_widened.json",
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "ACTION_MISMATCH"
+   }
+  },
+  {
+   "id": "main-ed25519/action_intent.json",
+   "directory": "main-ed25519",
+   "intent": "action_intent.json",
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "main-ed25519/action_intent_widened.json",
+   "directory": "main-ed25519",
+   "intent": "action_intent_widened.json",
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "ACTION_MISMATCH"
+   }
+  },
+  {
+   "id": "main-hs256/action_intent.json",
+   "directory": "main-hs256",
+   "intent": "action_intent.json",
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "main-hs256/action_intent_widened.json",
+   "directory": "main-hs256",
+   "intent": "action_intent_widened.json",
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "ACTION_MISMATCH"
+   }
+  },
+  {
+   "id": "published-ed25519/action_intent.json",
+   "directory": "published-ed25519",
+   "intent": "action_intent.json",
+   "expected": {
+    "outcome": "verified"
+   }
+  },
+  {
+   "id": "published-ed25519/action_intent_widened.json",
+   "directory": "published-ed25519",
+   "intent": "action_intent_widened.json",
+   "expected": {
+    "outcome": "refused",
+    "reason_code": "ACTION_MISMATCH"
+   }
+  }
+ ]
+}

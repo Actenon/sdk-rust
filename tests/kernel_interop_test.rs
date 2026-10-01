@@ -7,12 +7,11 @@ use std::path::PathBuf;
 
 use actenon_verifier_sdk::{
     build_local_proof_verifier, verify_approval_artifact_for_action, verify_countersignature,
-    verify_inclusion, ActionHashSpec, AudienceRef, SignatureSpec, SignatureVerifier,
-    VerificationContextInput, Verifier, LOCAL_PROOF_KEY_ID, LOCAL_PROOF_SECRET,
+    verify_inclusion, ActionHashSpec, AudienceRef, Ed25519Verifier, SignatureSpec,
+    SignatureVerifier, VerificationContextInput, Verifier, LOCAL_PROOF_KEY_ID, LOCAL_PROOF_SECRET,
 };
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
-use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
 use serde_json::Value;
 use time::format_description::well_known::Rfc3339;
 use time::{Duration, OffsetDateTime};
@@ -25,34 +24,9 @@ fn fixture(name: &str) -> Value {
         .expect("failed to decode kernel interop vectors")
 }
 
-/// An Ed25519 `SignatureVerifier` equivalent to the reference's well-known
-/// EdDSA verifier, plugged in through the exported trait.
-struct Ed25519TestVerifier {
-    key_id: String,
-    key: VerifyingKey,
-}
-
-impl SignatureVerifier for Ed25519TestVerifier {
-    fn verify(&self, payload: &[u8], signature: &SignatureSpec) -> bool {
-        if signature.algorithm != "EdDSA"
-            || signature.key_id != self.key_id
-            || signature.encoding != "base64url"
-        {
-            return false;
-        }
-        let Ok(raw) = URL_SAFE_NO_PAD.decode(signature.value.as_bytes()) else {
-            return false;
-        };
-        let Ok(signature) = Signature::from_slice(&raw) else {
-            return false;
-        };
-        self.key.verify(payload, &signature).is_ok()
-    }
-}
-
 enum AnyVerifier {
     Local(actenon_verifier_sdk::HmacSha256Verifier),
-    Ed25519(Ed25519TestVerifier),
+    Ed25519(Ed25519Verifier),
 }
 
 impl SignatureVerifier for AnyVerifier {
@@ -106,10 +80,11 @@ fn run_case(document: &Value, case: &Value) -> Result<(), String> {
                 .unwrap()
                 .try_into()
                 .unwrap();
-            AnyVerifier::Ed25519(Ed25519TestVerifier {
-                key_id: ed25519["key_id"].as_str().unwrap().to_string(),
-                key: VerifyingKey::from_bytes(&public_key).unwrap(),
-            })
+            AnyVerifier::Ed25519(
+                Ed25519Verifier::new()
+                    .with_key(ed25519["key_id"].as_str().unwrap(), public_key)
+                    .unwrap(),
+            )
         }
         other => panic!("unknown signer {other}"),
     };
@@ -119,38 +94,38 @@ fn run_case(document: &Value, case: &Value) -> Result<(), String> {
             case["clock_skew_tolerance_ms"].as_i64().unwrap(),
         ))
         .unwrap();
-    let context = verifier
-        .build_context(VerificationContextInput {
-            request_id: context["request_id"].as_str().unwrap().to_string(),
-            audience: AudienceRef {
-                r#type: context["audience"]["type"].as_str().unwrap().to_string(),
-                id: context["audience"]["id"].as_str().unwrap().to_string(),
-                uri: context["audience"]["uri"].as_str().map(str::to_string),
-            },
-            now: OffsetDateTime::parse(context["now"].as_str().unwrap(), &Rfc3339).unwrap(),
-            scope_capabilities: context["scope_capabilities"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(|value| value.as_str().unwrap().to_string())
-                .collect(),
-            parameter_constraints: context["parameter_constraints"]
-                .as_object()
-                .unwrap()
-                .clone(),
-            resource_selectors: context["resource_selectors"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(|value| value.as_object().unwrap().clone())
-                .collect(),
-        })
-        .unwrap();
-    let result = verifier.verify_json(
-        case["intent"].as_str().unwrap().as_bytes(),
-        case["pccb"].as_str().unwrap().as_bytes(),
-        context,
-    );
+    let context = verifier.build_context(VerificationContextInput {
+        request_id: context["request_id"].as_str().unwrap().to_string(),
+        audience: AudienceRef {
+            r#type: context["audience"]["type"].as_str().unwrap().to_string(),
+            id: context["audience"]["id"].as_str().unwrap().to_string(),
+            uri: context["audience"]["uri"].as_str().map(str::to_string),
+        },
+        now: OffsetDateTime::parse(context["now"].as_str().unwrap(), &Rfc3339).unwrap(),
+        scope_capabilities: context["scope_capabilities"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|value| value.as_str().unwrap().to_string())
+            .collect(),
+        parameter_constraints: context["parameter_constraints"]
+            .as_object()
+            .unwrap()
+            .clone(),
+        resource_selectors: context["resource_selectors"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|value| value.as_object().unwrap().clone())
+            .collect(),
+    });
+    let result = context.and_then(|context| {
+        verifier.verify_json(
+            case["intent"].as_str().unwrap().as_bytes(),
+            case["pccb"].as_str().unwrap().as_bytes(),
+            context,
+        )
+    });
     let (outcome, reason_code) = expectation(case);
     match (outcome.as_str(), result) {
         ("verified", Ok(_)) => Ok(()),
@@ -438,4 +413,17 @@ fn enforces_action_intent_semantics_and_escrow_binding() {
         "hs256/pccb_escrow_space",
         "hs256/pccb_escrow_empty",
     ]);
+}
+
+/// Every kernel_interop_v1 case: the SDK must reach the reference's
+/// decision (or its documented stricter override) and must never verify a
+/// proof the reference refuses.
+#[test]
+fn kernel_interop_vectors() {
+    run_cases(&[]);
+}
+
+#[test]
+fn kernel_interop_artifact_vectors() {
+    run_artifact_cases(&[]);
 }

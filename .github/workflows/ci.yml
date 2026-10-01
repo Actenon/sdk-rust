@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+  RUSTDOCFLAGS: -D warnings
+
+jobs:
+  lint:
+    name: fmt + clippy + doc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --all --check
+      - run: cargo clippy --all-targets --locked -- -D warnings
+      - run: cargo doc --no-deps --locked
+
+  test:
+    name: Test (Rust ${{ matrix.rust }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Cargo.toml rust-version (MSRV) and the current stable release.
+        rust: ['1.88', stable]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: clippy
+      # Clippy's default lints differ by release (1.88 flags
+      # uninlined_format_args, current stable does not); the lint job covers
+      # stable, this covers the MSRV.
+      - if: matrix.rust == '1.88'
+        run: cargo clippy --all-targets --locked -- -D warnings
+      # Runs the conformance, differential and Permit interop vectors and
+      # the README quickstart (doctest).
+      - run: cargo test --all-targets --locked
+      - run: cargo test --doc --locked
+
+  kernel-vectors:
+    # The fixtures vendored from actenon-kernel must be byte-identical to the
+    # kernel at the commit pinned in fixtures/KERNEL_PIN.
+    name: Vendored kernel vectors match the pinned kernel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Fetch the kernel vector lock at the pinned commit
+        run: |
+          pin="$(cat fixtures/KERNEL_PIN)"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/vector-lock.json" \
+            "https://raw.githubusercontent.com/Actenon/actenon-kernel/${pin}/conformance/vector-lock.json"
+          sha256sum "$RUNNER_TEMP/vector-lock.json" fixtures/kernel_vector_lock.json
+      - name: Check every vendored locked fixture's sha256 against the downloaded lock
+        env:
+          ACTENON_KERNEL_VECTOR_LOCK: ${{ runner.temp }}/vector-lock.json
+        run: cargo test --locked --test kernel_vector_lock_test
+      - name: Compare vendored files the kernel lock does not cover with the kernel tree
+        run: |
+          set -o pipefail
+          pin="$(cat fixtures/KERNEL_PIN)"
+          status=0
+          while read -r vendored kernel; do
+            case "$vendored" in ''|'#'*) continue ;; esac
+            if curl -fsSL --retry 3 "https://raw.githubusercontent.com/Actenon/actenon-kernel/${pin}/${kernel}" \
+                | cmp - "fixtures/${vendored}"; then
+              echo "ok   fixtures/${vendored} == ${pin}:${kernel} (not hash-locked by the kernel)"
+            else
+              echo "FAIL fixtures/${vendored} != ${pin}:${kernel}"
+              status=1
+            fi
+          done < fixtures/KERNEL_UNLOCKED
+          exit "$status"

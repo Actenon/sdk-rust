@@ -435,7 +435,9 @@ pub fn verify_issuer_status_with_options(
         "status_artifact.contract",
         "INVALID_ISSUER_STATUS",
     )?;
-    if contract.get("name").and_then(Value::as_str) != Some("issuer_status")
+    // The reference compares the contract object exactly.
+    if contract.len() != 2
+        || contract.get("name").and_then(Value::as_str) != Some("issuer_status")
         || contract.get("version").and_then(Value::as_str) != Some("v1")
     {
         return Err(error(
@@ -577,7 +579,9 @@ pub fn verify_approval_artifact_for_action(
         "approval.contract",
         "INVALID_APPROVAL_ARTIFACT",
     )?;
-    if contract.get("name").and_then(Value::as_str) != Some("approval_artifact")
+    // The reference compares the contract object exactly.
+    if contract.len() != 2
+        || contract.get("name").and_then(Value::as_str) != Some("approval_artifact")
         || contract.get("version").and_then(Value::as_str) != Some("v1")
     {
         return Err(error(

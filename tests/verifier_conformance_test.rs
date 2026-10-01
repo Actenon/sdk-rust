@@ -189,3 +189,114 @@ fn shared_verifier_sdk_conformance_vectors() {
         );
     }
 }
+
+#[derive(Deserialize)]
+struct TimestampCase {
+    id: String,
+    intent: String,
+    pccb: String,
+    context: Value,
+    expected: Expected,
+}
+
+#[derive(Deserialize)]
+struct TimestampManifest {
+    clock_skew_tolerance_ms: i64,
+    cases: Vec<TimestampCase>,
+}
+
+fn read_vector(name: &str) -> Vec<u8> {
+    fs::read(vector_root().join(name))
+        .unwrap_or_else(|error| panic!("failed to read shared vector {name}: {error}"))
+}
+
+fn load_timestamp_manifest() -> TimestampManifest {
+    serde_json::from_slice(&read_vector("timestamp_cases.json"))
+        .expect("failed to decode timestamp_cases.json")
+}
+
+// Kernel timestamp_cases.json: proofs minted with the ACTENON-JCS-STRICT-1
+// label and fractional-second timestamps, plus microsecond window boundaries.
+// The vendored intent and PCCB bytes are verified as-is (no re-encoding).
+#[test]
+fn shared_fractional_second_timestamp_vectors() {
+    let manifest = load_timestamp_manifest();
+    assert!(
+        !manifest.cases.is_empty(),
+        "timestamp_cases.json has no cases"
+    );
+    for vector in manifest.cases {
+        let id = &vector.id;
+        let pccb_raw = read_vector(&vector.pccb);
+        let pccb_document: Value = serde_json::from_slice(&pccb_raw).expect("pccb must decode");
+        let verifier = Verifier::new(build_local_proof_verifier())
+            .with_clock_skew_tolerance(Duration::milliseconds(manifest.clock_skew_tolerance_ms))
+            .expect("skew must be valid");
+        let intent = parse_action_intent_json(&read_vector(&vector.intent))
+            .unwrap_or_else(|error| panic!("{id}: intent must parse: {error}"));
+        let pccb = parse_pccb_json(&pccb_raw)
+            .unwrap_or_else(|error| panic!("{id}: pccb must parse: {error}"));
+        let context = verifier
+            .build_context(context_from_value(&vector.context))
+            .expect("context must parse");
+        let result = verifier.verify(intent, pccb, context);
+        if vector.expected.outcome == "verified" {
+            let verified =
+                result.unwrap_or_else(|error| panic!("{id} expected verification, got {error}"));
+            assert_eq!(
+                verified.pccb.pccb_id, pccb_document["pccb_id"],
+                "{id} pccb id"
+            );
+            assert_eq!(
+                verified.pccb.action_hash.canonicalization, "ACTENON-JCS-STRICT-1",
+                "{id} label"
+            );
+            continue;
+        }
+        let error = result.expect_err("timestamp refusal vector must fail");
+        assert_eq!(
+            error.code().as_str(),
+            vector.expected.reason_code,
+            "{id} reason code"
+        );
+        assert_eq!(
+            error.message(),
+            vector.expected.message,
+            "{id} public message"
+        );
+    }
+}
+
+// Every JSON file in fixtures/verifier_sdk_v1 must be a manifest with a
+// runner above or a document one of those manifests references, so a vector
+// cannot be vendored without being executed.
+#[test]
+fn shared_verifier_vectors_are_all_executed() {
+    let manifest: Manifest =
+        serde_json::from_slice(&read_vector("cases.json")).expect("failed to decode manifest");
+    let mut executed = vec![
+        "cases.json".to_string(),
+        "timestamp_cases.json".to_string(),
+        manifest.base.intent,
+        manifest.base.pccb,
+    ];
+    for vector in load_timestamp_manifest().cases {
+        executed.push(vector.intent);
+        executed.push(vector.pccb);
+    }
+    let mut orphans = Vec::new();
+    for entry in fs::read_dir(vector_root()).expect("failed to list shared vectors") {
+        let name = entry
+            .expect("failed to read directory entry")
+            .file_name()
+            .into_string()
+            .expect("vector file names are UTF-8");
+        if name.ends_with(".json") && !executed.contains(&name) {
+            orphans.push(name);
+        }
+    }
+    assert!(
+        orphans.is_empty(),
+        "fixtures/verifier_sdk_v1 files vendored but executed by no runner: {orphans:?}"
+    );
+}

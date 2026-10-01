@@ -243,7 +243,9 @@ pub fn verify_countersignature(
         "countersignature.contract",
         "INVALID_COUNTERSIGNATURE",
     )?;
-    if contract.get("name").and_then(Value::as_str) != Some("receipt_countersignature")
+    // The reference compares the contract object exactly.
+    if contract.len() != 2
+        || contract.get("name").and_then(Value::as_str) != Some("receipt_countersignature")
         || contract.get("version").and_then(Value::as_str) != Some("v1")
     {
         return Err(error(
@@ -282,7 +284,9 @@ pub fn verify_countersignature(
         "countersignature.signed_at",
         "INVALID_COUNTERSIGNATURE",
     )?;
+    // As in the reference, a null anchor_reference is the same as an absent one.
     let anchor_reference = match artifact.get("anchor_reference") {
+        Some(Value::Null) | None => None,
         Some(value) => Some(
             object(
                 value,
@@ -291,7 +295,6 @@ pub fn verify_countersignature(
             )?
             .clone(),
         ),
-        None => None,
     };
     let signature = object(
         artifact
@@ -454,9 +457,12 @@ pub fn verify_countersignature(
             "TRUSTED_KEYS_INVALID",
         )?)
         .map_err(|_| error("TRUSTED_KEYS_INVALID", "public_key_jwk.x must be base64url"))?;
-    let signature_bytes = URL_SAFE_NO_PAD
-        .decode(signature_value)
-        .map_err(|_| error("SIGNATURE_INVALID", "signature.value must be base64url"))?;
+    let signature_bytes = URL_SAFE_NO_PAD.decode(signature_value).map_err(|_| {
+        error(
+            "INVALID_COUNTERSIGNATURE",
+            "signature.value must be unpadded base64url",
+        )
+    })?;
     let public_key_array: [u8; 32] = public_key_bytes.try_into().map_err(|_| {
         error(
             "TRUSTED_KEYS_INVALID",
