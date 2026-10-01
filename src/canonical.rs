@@ -34,7 +34,7 @@ pub fn canonicalize_bytes<T: Serialize>(value: &T) -> Result<Vec<u8>, String> {
 pub fn sha256_hex<T: Serialize>(value: &T) -> Result<String, String> {
     let bytes = canonicalize_bytes(value)?;
     let digest = Sha256::digest(bytes);
-    Ok(format!("{:x}", digest))
+    Ok(format!("{digest:x}"))
 }
 
 fn canonicalize_value(value: &Value) -> Result<String, String> {
