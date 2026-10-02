@@ -37,7 +37,8 @@ pub use types::{
     VerificationContextInput, VerifiedProtectedRequest, PCCB,
 };
 pub use verifier::{
-    parse_action_intent_json, parse_pccb_json, Verifier, DEFAULT_CLOCK_SKEW_TOLERANCE,
+    parse_action_intent_json, parse_pccb_json, RevocationChecker, Verifier,
+    DEFAULT_CLOCK_SKEW_TOLERANCE,
 };
 
 /// Compiles the README's code blocks as doctests.

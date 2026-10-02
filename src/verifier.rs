@@ -25,9 +25,16 @@ pub fn parse_pccb_json(raw: &[u8]) -> Result<PCCB, VerificationError> {
     normalize_pccb(pccb)
 }
 
+/// Consults the revocation source for a proof's signed authority
+/// (protocol/13-edge-binding.md E5): `Ok(true)` only when the authority is
+/// NOT revoked; `Err` when the source could not be consulted.
+pub type RevocationChecker =
+    Box<dyn Fn(&PCCB, &VerificationContext) -> Result<bool, String> + Send + Sync>;
+
 pub struct Verifier<V: SignatureVerifier> {
     signature_verifier: V,
     clock_skew_tolerance: Duration,
+    revocation_checker: Option<RevocationChecker>,
 }
 
 impl<V: SignatureVerifier> Verifier<V> {
@@ -35,7 +42,18 @@ impl<V: SignatureVerifier> Verifier<V> {
         Self {
             signature_verifier,
             clock_skew_tolerance: DEFAULT_CLOCK_SKEW_TOLERANCE,
+            revocation_checker: None,
         }
+    }
+
+    /// Configures the edge's revocation source. A proof whose signed
+    /// authority declares `"revocable": true` is refused without one.
+    pub fn with_revocation_checker<F>(mut self, checker: F) -> Self
+    where
+        F: Fn(&PCCB, &VerificationContext) -> Result<bool, String> + Send + Sync + 'static,
+    {
+        self.revocation_checker = Some(Box::new(checker));
+        self
     }
 
     pub fn with_clock_skew_tolerance(
@@ -65,6 +83,41 @@ impl<V: SignatureVerifier> Verifier<V> {
         input: VerificationContextInput,
     ) -> Result<VerificationContext, VerificationError> {
         normalize_context(input)
+    }
+
+    // protocol/13-edge-binding.md E5.
+    fn check_revocation(
+        &self,
+        pccb: &PCCB,
+        context: &VerificationContext,
+    ) -> Result<(), VerificationError> {
+        let unknown = || {
+            VerificationError::new(
+                VerificationErrorCode::AuthorityRevoked,
+                "The proof authority's revocation status could not be established.",
+            )
+        };
+        let mut revocable = false;
+        if let Some(authority) = pccb.extensions.get("authority") {
+            let authority = authority.as_object().ok_or_else(unknown)?;
+            match authority.get("revocable") {
+                None => {}
+                Some(Value::Bool(flag)) => revocable = *flag,
+                Some(_) => return Err(unknown()),
+            }
+        }
+        match &self.revocation_checker {
+            None if revocable => Err(unknown()),
+            None => Ok(()),
+            Some(checker) => match checker(pccb, context) {
+                Ok(true) => Ok(()),
+                Ok(false) => Err(VerificationError::new(
+                    VerificationErrorCode::AuthorityRevoked,
+                    "The proof authority has been revoked.",
+                )),
+                Err(_) => Err(unknown()),
+            },
+        }
     }
 
     pub fn verify(
@@ -247,6 +300,7 @@ impl<V: SignatureVerifier> Verifier<V> {
                 "The proof target does not satisfy this endpoint's resource selectors.",
             ));
         }
+        self.check_revocation(&normalized_pccb, &normalized_context)?;
 
         Ok(VerifiedProtectedRequest {
             intent: normalized_intent,

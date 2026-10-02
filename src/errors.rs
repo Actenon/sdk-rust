@@ -22,6 +22,7 @@ pub enum VerificationErrorCode {
     ActionHashAlgorithmInvalid,
     ActionHashMismatch,
     SignatureInvalid,
+    AuthorityRevoked,
 }
 
 impl VerificationErrorCode {
@@ -45,6 +46,7 @@ impl VerificationErrorCode {
             Self::ActionHashAlgorithmInvalid => "ACTION_HASH_ALGORITHM_INVALID",
             Self::ActionHashMismatch => "ACTION_HASH_MISMATCH",
             Self::SignatureInvalid => "SIGNATURE_INVALID",
+            Self::AuthorityRevoked => "AUTHORITY_REVOKED",
         }
     }
 }
