@@ -267,6 +267,76 @@ fn shared_fractional_second_timestamp_vectors() {
     }
 }
 
+#[derive(Deserialize)]
+struct ContextMutation {
+    path: Vec<String>,
+    value: Value,
+}
+
+#[derive(Deserialize)]
+struct EdgeCase {
+    id: String,
+    clock_skew_tolerance_ms: i64,
+    #[serde(default)]
+    pccb: Option<String>,
+    #[serde(default)]
+    context_mutation: Option<ContextMutation>,
+    expected: Expected,
+}
+
+#[derive(Deserialize)]
+struct EdgeManifest {
+    base: Base,
+    cases: Vec<EdgeCase>,
+}
+
+fn load_edge_manifest() -> EdgeManifest {
+    serde_json::from_slice(&read_vector("edge_binding_cases.json"))
+        .expect("failed to decode edge_binding_cases.json")
+}
+
+// protocol/13-edge-binding.md E1-E4, vendored from the kernel and run from
+// the raw vector bytes.
+#[test]
+fn edge_binding_vectors() {
+    let manifest = load_edge_manifest();
+    assert!(!manifest.cases.is_empty());
+    let intent_raw = read_vector(&manifest.base.intent);
+    for vector in manifest.cases {
+        let pccb_raw = read_vector(vector.pccb.as_deref().unwrap_or(&manifest.base.pccb));
+        let mut context_document = manifest.base.context.clone();
+        if let Some(mutation) = vector.context_mutation {
+            set_path(&mut context_document, &mutation.path, mutation.value);
+        }
+        let verifier = Verifier::new(build_local_proof_verifier())
+            .with_clock_skew_tolerance(Duration::milliseconds(vector.clock_skew_tolerance_ms))
+            .expect("skew must be valid");
+        let result = parse_action_intent_json(&intent_raw).and_then(|intent| {
+            let pccb = parse_pccb_json(&pccb_raw)?;
+            let context = verifier.build_context(context_from_value(&context_document))?;
+            verifier.verify(intent, pccb, context)
+        });
+        if vector.expected.outcome == "verified" {
+            result
+                .unwrap_or_else(|error| panic!("{} expected verification, got {error}", vector.id));
+            continue;
+        }
+        let error = result.expect_err(&format!("{} must be refused", vector.id));
+        assert_eq!(
+            error.code().as_str(),
+            vector.expected.reason_code,
+            "{} reason code",
+            vector.id
+        );
+        assert_eq!(
+            error.message(),
+            vector.expected.message,
+            "{} public message",
+            vector.id
+        );
+    }
+}
+
 // Every JSON file in fixtures/verifier_sdk_v1 must be a manifest with a
 // runner above or a document one of those manifests references, so a vector
 // cannot be vendored without being executed.
@@ -274,12 +344,17 @@ fn shared_fractional_second_timestamp_vectors() {
 fn shared_verifier_vectors_are_all_executed() {
     let manifest: Manifest =
         serde_json::from_slice(&read_vector("cases.json")).expect("failed to decode manifest");
+    let edge = load_edge_manifest();
     let mut executed = vec![
         "cases.json".to_string(),
         "timestamp_cases.json".to_string(),
+        "edge_binding_cases.json".to_string(),
         manifest.base.intent,
         manifest.base.pccb,
+        edge.base.intent,
+        edge.base.pccb,
     ];
+    executed.extend(edge.cases.into_iter().filter_map(|case| case.pccb));
     for vector in load_timestamp_manifest().cases {
         executed.push(vector.intent);
         executed.push(vector.pccb);

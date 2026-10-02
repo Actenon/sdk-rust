@@ -7,8 +7,9 @@ use crate::canonical::{canonicalize_bytes, is_accepted_canonicalization, sha256_
 use crate::errors::{VerificationError, VerificationErrorCode};
 use crate::signers::SignatureVerifier;
 use crate::types::{
-    ActionIntent, ActionSpec, AudienceRef, PartyRef, ScopeSpec, SignatureSpec, TargetRef,
-    TenantRef, VerificationContext, VerificationContextInput, VerifiedProtectedRequest, PCCB,
+    ActionIntent, ActionSpec, AudienceRef, JsonObject, PartyRef, ScopeSpec, SignatureSpec,
+    TargetRef, TenantRef, VerificationContext, VerificationContextInput, VerifiedProtectedRequest,
+    PCCB,
 };
 
 pub const DEFAULT_CLOCK_SKEW_TOLERANCE: Duration = Duration::ZERO;
@@ -143,7 +144,8 @@ impl<V: SignatureVerifier> Verifier<V> {
                 "The proof target does not exactly match the action intent.",
             ));
         }
-        if normalized_pccb.scope.mode != "exact" {
+        // Protocol v1 proofs are exact and single-use only (protocol/13 E4).
+        if normalized_pccb.scope.mode != "exact" || !normalized_pccb.scope.single_use {
             return Err(VerificationError::new(
                 VerificationErrorCode::ScopeModeInvalid,
                 "The proof scope mode is not supported.",
@@ -158,6 +160,17 @@ impl<V: SignatureVerifier> Verifier<V> {
             return Err(VerificationError::new(
                 VerificationErrorCode::ScopeCapabilityMismatch,
                 "The proof scope does not allow this capability.",
+            ));
+        }
+        // E1: the capability must be one this endpoint declares it performs.
+        if !normalized_context
+            .scope_capabilities
+            .iter()
+            .any(|capability| capability == &normalized_intent.action.capability)
+        {
+            return Err(VerificationError::new(
+                VerificationErrorCode::ScopeCapabilityMismatch,
+                "The action capability is not one this endpoint performs.",
             ));
         }
         if normalized_pccb.intent_id.as_deref().is_some()
@@ -206,6 +219,32 @@ impl<V: SignatureVerifier> Verifier<V> {
             return Err(VerificationError::new(
                 VerificationErrorCode::ActionHashMismatch,
                 "The proof action hash does not match the action intent.",
+            ));
+        }
+        // E2: every constraint the endpoint relies on was signed into the proof.
+        for (key, value) in &normalized_context.parameter_constraints {
+            let covered = normalized_pccb
+                .scope
+                .parameter_constraints
+                .get(key)
+                .is_some_and(|signed| canonical_value_eq(signed, value));
+            if !covered {
+                return Err(VerificationError::new(
+                    VerificationErrorCode::ParameterMismatch,
+                    "The proof parameter constraints do not cover this endpoint's constraints.",
+                ));
+            }
+        }
+        // E3: the signed target satisfies at least one declared selector.
+        if !normalized_context.resource_selectors.is_empty()
+            && !normalized_context
+                .resource_selectors
+                .iter()
+                .any(|selector| target_satisfies(&normalized_pccb.target, selector))
+        {
+            return Err(VerificationError::new(
+                VerificationErrorCode::TargetMismatch,
+                "The proof target does not satisfy this endpoint's resource selectors.",
             ));
         }
 
@@ -517,13 +556,9 @@ fn normalize_context(
         "context.request_id",
         VerificationErrorCode::InvalidContext,
     )?;
+    // An empty declaration is refused by edge-binding rule E1 after the
+    // signature verifies, with the same code in every SDK.
     let mut capabilities = input.scope_capabilities;
-    if capabilities.is_empty() {
-        return Err(VerificationError::new(
-            VerificationErrorCode::InvalidContext,
-            "context.scope_capabilities must contain at least one capability.",
-        ));
-    }
     capabilities.sort();
 
     Ok(VerificationContext {
@@ -848,4 +883,29 @@ fn reject_duplicate_members(raw: &[u8]) -> Result<(), serde_json::Error> {
     let mut deserializer = Deserializer::from_slice(raw);
     serde::de::DeserializeSeed::deserialize(NoDuplicates, &mut deserializer)?;
     deserializer.end()
+}
+
+fn canonical_value_eq(left: &serde_json::Value, right: &serde_json::Value) -> bool {
+    match (canonicalize_bytes(left), canonicalize_bytes(right)) {
+        (Ok(left), Ok(right)) => left == right,
+        _ => false,
+    }
+}
+
+// protocol/13-edge-binding.md E3.
+fn target_satisfies(target: &TargetRef, selector: &JsonObject) -> bool {
+    if selector.is_empty() {
+        return false;
+    }
+    selector.iter().all(|(key, value)| {
+        let actual = match key.as_str() {
+            "resource_id" => serde_json::Value::String(target.resource_id.clone()),
+            "resource_type" => serde_json::Value::String(target.resource_type.clone()),
+            other => match target.selectors.get(other) {
+                Some(found) => found.clone(),
+                None => return false,
+            },
+        };
+        canonical_value_eq(&actual, value)
+    })
 }
