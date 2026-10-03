@@ -8,14 +8,18 @@ Minimum supported Rust version: 1.88.
 
 ## Install
 
-Add to `Cargo.toml`:
+```bash
+cargo add actenon-verifier-sdk@0.2
+```
+
+or in `Cargo.toml`:
 
 ```toml
 [dependencies]
-actenon-verifier-sdk = { git = "https://github.com/Actenon/sdk-rust", tag = "v0.1.0" }
+actenon-verifier-sdk = "0.2"
 ```
 
-crates.io publication is prepared (Cargo.toml has all required fields, publish workflow is in place) and will complete once the `CARGO_REGISTRY_TOKEN` secret is added.
+0.2.0 implements actenon-protocol 13 (edge binding and revocation); 0.1.0 (git tag only) does not.
 
 ## Scope
 
