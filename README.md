@@ -87,6 +87,19 @@ the same calls run against real Permit-minted proofs in
 proofs signed with the public development key use
 `build_local_proof_verifier()` instead.
 
+### What the edge declares, and revocation
+
+The context is the protected edge's own declaration
+([protocol 13](https://github.com/Actenon/actenon-protocol/blob/main/protocol/13-edge-binding.md)), never the request's:
+
+- `scope_capabilities` (required) — refuses `SCOPE_CAPABILITY_MISMATCH`.
+- `parameter_constraints` (optional, each signed into the proof) — refuses `PARAMETER_MISMATCH`.
+- `resource_selectors` (optional, any-of against the signed target) — refuses `TARGET_MISMATCH`.
+
+Proofs minted by actenon-permit 2.0 carry revocable authority and are refused (`AUTHORITY_REVOKED`) unless the verifier
+has a revocation source: `Verifier::new(..).with_revocation_checker(|pccb, ctx| -> Result<bool, String> { .. })`, which
+returns `Ok(true)` only when the authority is known and not revoked. `Ok(false)` and `Err(_)` both refuse.
+
 ## The Actenon ecosystem
 
 <!-- ECOSYSTEM-TABLE:START -->
