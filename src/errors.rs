@@ -13,6 +13,7 @@ pub enum VerificationErrorCode {
     AudienceMismatch,
     ScopeModeInvalid,
     ScopeCapabilityMismatch,
+    ParameterMismatch,
     IntentMismatch,
     TenantMismatch,
     SubjectMismatch,
@@ -21,6 +22,7 @@ pub enum VerificationErrorCode {
     ActionHashAlgorithmInvalid,
     ActionHashMismatch,
     SignatureInvalid,
+    AuthorityRevoked,
 }
 
 impl VerificationErrorCode {
@@ -35,6 +37,7 @@ impl VerificationErrorCode {
             Self::AudienceMismatch => "AUDIENCE_MISMATCH",
             Self::ScopeModeInvalid => "SCOPE_MODE_INVALID",
             Self::ScopeCapabilityMismatch => "SCOPE_CAPABILITY_MISMATCH",
+            Self::ParameterMismatch => "PARAMETER_MISMATCH",
             Self::IntentMismatch => "INTENT_MISMATCH",
             Self::TenantMismatch => "TENANT_MISMATCH",
             Self::SubjectMismatch => "SUBJECT_MISMATCH",
@@ -43,6 +46,7 @@ impl VerificationErrorCode {
             Self::ActionHashAlgorithmInvalid => "ACTION_HASH_ALGORITHM_INVALID",
             Self::ActionHashMismatch => "ACTION_HASH_MISMATCH",
             Self::SignatureInvalid => "SIGNATURE_INVALID",
+            Self::AuthorityRevoked => "AUTHORITY_REVOKED",
         }
     }
 }

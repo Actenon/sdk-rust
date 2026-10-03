@@ -1,0 +1,18 @@
+{
+  "comment": "Single source of truth for branch protection (pull_request) and the publish workflows' release gate (release). Validated against .github/workflows by scripts/release_gate.py validate (CI job 'Required-check names exist'). ",
+  "branch": "main",
+  "pull_request": [
+    "fmt + clippy + doc",
+    "Test (Rust 1.88)",
+    "Test (Rust stable)",
+    "Vendored kernel vectors match the pinned kernel",
+    "Required-check names exist"
+  ],
+  "release": [
+    "fmt + clippy + doc",
+    "Test (Rust 1.88)",
+    "Test (Rust stable)",
+    "Vendored kernel vectors match the pinned kernel",
+    "Required-check names exist"
+  ]
+}
