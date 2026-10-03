@@ -23,7 +23,7 @@ First crates.io release.
 
 - The kernel's shared vectors (`edge_binding_cases.json`,
   `edge_revocation_cases.json`) are vendored byte-identically and pinned to
-  kernel `fce8a5b` (`fixtures/KERNEL_PIN`).
+  kernel `b1b175d` (`fixtures/KERNEL_PIN`), Conformance 1.1.0.
 
 ## [0.1.0]
 
