@@ -109,10 +109,10 @@ returns `Ok(true)` only when the authority is known and not revoked. `Ok(false)`
 | **`actenon-kernel`** | The open verifier — defines what a valid proof is | `actenon-protocol` | `actenon-kernel` (PyPI) |
 | **`actenon-permit`** | The developer on-ramp and authority broker | `actenon-kernel`, `actenon-protocol` | `actenon-permit` (PyPI) · `@actenon/sdk` (npm) |
 | **`actenon-scan`** | The independent static-analysis scanner | — | `actenon-scan` (PyPI) |
-| **`sdk-go`** | Go verifier SDK | `actenon-protocol` | `github.com/Actenon/sdk-go` (v1.0.0) |
-| **`sdk-rust`** ← you are here | Rust verifier SDK | `actenon-protocol` | `cargo add --git` (crates.io pending) |
+| **`sdk-go`** | Go verifier SDK — protected-endpoint proof verification in Go | `actenon-protocol` | [repo](https://github.com/Actenon/sdk-go) |
+| **`sdk-rust`** ← you are here | Rust verifier SDK — protected-endpoint proof verification in Rust | `actenon-protocol` | [repo](https://github.com/Actenon/sdk-rust) |
 
-**Optional:** [`actenon-cloud`](https://github.com/Actenon/actenon-cloud) — a managed control plane (source-available; see its LICENSE). Not required by any component above; every capability in this ecosystem works without it.
+**Optional:** `actenon-cloud` — a managed control plane (private repository, not publicly available). Not required by any component above; every capability in this ecosystem works without it.
 <!-- ECOSYSTEM-TABLE:END -->
 
 ## Conformance

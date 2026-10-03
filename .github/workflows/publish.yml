@@ -17,7 +17,25 @@ on:
   workflow_dispatch:
 
 jobs:
+  release-gate:
+    # Publish only the exact v<version> tag, on a commit that is on main
+    # and whose required checks (.github/required-checks.json "release") passed.
+    name: Release gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Tag commit is on main and its required checks passed
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/release_gate.py gate --tag-prefix v --version-from Cargo.toml
+
   publish:
+    needs: release-gate
     name: Publish to crates.io
     runs-on: ubuntu-latest
 
@@ -28,19 +46,25 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Run tests
-        run: cargo test --all
+        run: cargo test --all-targets --locked
 
       - name: Dry-run publish (verify package is publishable)
-        run: cargo publish --dry-run --allow-dirty
+        run: cargo publish --dry-run --locked
 
       - name: Publish to crates.io
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --allow-dirty --token "$CARGO_REGISTRY_TOKEN"
+        # No --allow-dirty: publish exactly the tagged, reviewed commit.
+        run: cargo publish --locked --token "$CARGO_REGISTRY_TOKEN"
 
-      - name: Verify publication
+      - name: Download the published crate from crates.io and run its tests
         run: |
-          sleep 5
-          VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
-          echo "Published actenon-verifier-sdk@$VERSION"
-          echo "View at: https://crates.io/crates/actenon-verifier-sdk/$VERSION"
+          VERSION=$(python3 -c "import tomllib;print(tomllib.load(open('Cargo.toml','rb'))['package']['version'])")
+          for _ in $(seq 1 30); do
+            curl -fsSL -A "actenon-sdk-rust-release" -o "$RUNNER_TEMP/sdk.crate" \
+              "https://crates.io/api/v1/crates/actenon-verifier-sdk/${VERSION}/download" && break
+            sleep 20
+          done
+          mkdir -p "$RUNNER_TEMP/crate" && tar -xzf "$RUNNER_TEMP/sdk.crate" -C "$RUNNER_TEMP/crate"
+          cd "$RUNNER_TEMP/crate/actenon-verifier-sdk-${VERSION}"
+          cargo test --locked --all-targets
