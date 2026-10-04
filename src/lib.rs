@@ -1,4 +1,5 @@
 mod canonical;
+mod capabilities;
 mod countersignature;
 mod errors;
 mod signers;
@@ -9,6 +10,11 @@ mod verifier;
 
 pub use canonical::{
     is_accepted_canonicalization, CANONICALIZATION_PROFILE, LEGACY_CANONICALIZATION_PROFILE,
+};
+pub use capabilities::{
+    authority_extension, capability_in_scope, is_concrete_capability, parse_authority_extension,
+    scope_capabilities_for_mint, scope_capabilities_for_verification, unauthenticated_refusal,
+    AuthorityExtension, CapabilityError, GLOB_CHARS, PROTOCOL_VERSION,
 };
 pub use countersignature::{
     verify_countersignature, CounterSignatureVerificationError, ReceiptDigest,

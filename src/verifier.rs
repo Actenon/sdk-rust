@@ -4,6 +4,9 @@ use time::format_description::well_known::Rfc3339;
 use time::{Duration, OffsetDateTime, UtcOffset};
 
 use crate::canonical::{canonicalize_bytes, is_accepted_canonicalization, sha256_hex};
+use crate::capabilities::{
+    capability_in_scope, parse_authority_extension, unauthenticated_refusal,
+};
 use crate::errors::{VerificationError, VerificationErrorCode};
 use crate::signers::SignatureVerifier;
 use crate::types::{
@@ -98,13 +101,10 @@ impl<V: SignatureVerifier> Verifier<V> {
             )
         };
         let mut revocable = false;
-        if let Some(authority) = pccb.extensions.get("authority") {
-            let authority = authority.as_object().ok_or_else(unknown)?;
-            match authority.get("revocable") {
-                None => {}
-                Some(Value::Bool(flag)) => revocable = *flag,
-                Some(_) => return Err(unknown()),
-            }
+        if pccb.extensions.contains_key("authority") {
+            let authority =
+                parse_authority_extension(Some(&pccb.extensions)).map_err(|_| unknown())?;
+            revocable = authority.revocable;
         }
         match &self.revocation_checker {
             None if revocable => Err(unknown()),
@@ -162,14 +162,20 @@ impl<V: SignatureVerifier> Verifier<V> {
                 "The proof cannot be canonicalized for signature verification.",
             )
         })?;
-        if !self
+        // Token length, a `v1.` prefix, and well-formed JSON are not acceptance.
+        // No trust root is ISSUER_UNTRUSTED. A forged signature is SIGNATURE_INVALID.
+        let signature_verified = self
             .signature_verifier
-            .verify(&unsigned_payload, &normalized_pccb.signature)
-        {
-            return Err(VerificationError::new(
-                VerificationErrorCode::SignatureInvalid,
-                "The proof signature could not be verified.",
-            ));
+            .verify(&unsigned_payload, &normalized_pccb.signature);
+        if let Some(code) = unauthenticated_refusal(
+            self.signature_verifier.trust_root_configured(),
+            signature_verified,
+        ) {
+            let message = match code {
+                VerificationErrorCode::IssuerUntrusted => "The proof has no configured trust root.",
+                _ => "The proof signature could not be verified.",
+            };
+            return Err(VerificationError::new(code, message));
         }
 
         // ── Semantic checks (after signature is verified) ────────────────
@@ -204,23 +210,22 @@ impl<V: SignatureVerifier> Verifier<V> {
                 "The proof scope mode is not supported.",
             ));
         }
-        if !normalized_pccb
-            .scope
-            .capabilities
-            .iter()
-            .any(|capability| capability == &normalized_intent.action.capability)
-        {
+        // Exact membership. A glob in the signed scope is not a capability and
+        // is not expanded to the attempted action.
+        if !capability_in_scope(
+            &normalized_intent.action.capability,
+            &normalized_pccb.scope.capabilities,
+        ) {
             return Err(VerificationError::new(
                 VerificationErrorCode::ScopeCapabilityMismatch,
                 "The proof scope does not allow this capability.",
             ));
         }
         // E1: the capability must be one this endpoint declares it performs.
-        if !normalized_context
-            .scope_capabilities
-            .iter()
-            .any(|capability| capability == &normalized_intent.action.capability)
-        {
+        if !capability_in_scope(
+            &normalized_intent.action.capability,
+            &normalized_context.scope_capabilities,
+        ) {
             return Err(VerificationError::new(
                 VerificationErrorCode::ScopeCapabilityMismatch,
                 "The action capability is not one this endpoint performs.",
