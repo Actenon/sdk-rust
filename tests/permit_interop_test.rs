@@ -110,7 +110,6 @@ fn ed25519_verifier_refuses_wrong_key_kid_and_algorithm() {
                 &pccb,
             ),
         ),
-        ("no keys", verify(Ed25519Verifier::new(), &intent, &pccb)),
         (
             "local HS256",
             verify(build_local_proof_verifier(), &intent, &pccb),
@@ -122,6 +121,14 @@ fn ed25519_verifier_refuses_wrong_key_kid_and_algorithm() {
             "{name}"
         );
     }
+    // No configured trust root is not a forged signature (wire 1.2.0).
+    assert_eq!(
+        verify(Ed25519Verifier::new(), &intent, &pccb)
+            .expect_err("no keys")
+            .code()
+            .as_str(),
+        "ISSUER_UNTRUSTED"
+    );
 
     let pinned = Ed25519Verifier::new().with_key(kid.clone(), key).unwrap();
     let signature: SignatureSpec = parse_pccb_json(pccb.as_bytes()).unwrap().signature;

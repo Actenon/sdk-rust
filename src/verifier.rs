@@ -4,11 +4,15 @@ use time::format_description::well_known::Rfc3339;
 use time::{Duration, OffsetDateTime, UtcOffset};
 
 use crate::canonical::{canonicalize_bytes, is_accepted_canonicalization, sha256_hex};
+use crate::capabilities::{
+    capability_in_scope, parse_authority_extension, unauthenticated_refusal,
+};
 use crate::errors::{VerificationError, VerificationErrorCode};
 use crate::signers::SignatureVerifier;
 use crate::types::{
-    ActionIntent, ActionSpec, AudienceRef, PartyRef, ScopeSpec, SignatureSpec, TargetRef,
-    TenantRef, VerificationContext, VerificationContextInput, VerifiedProtectedRequest, PCCB,
+    ActionIntent, ActionSpec, AudienceRef, JsonObject, PartyRef, ScopeSpec, SignatureSpec,
+    TargetRef, TenantRef, VerificationContext, VerificationContextInput, VerifiedProtectedRequest,
+    PCCB,
 };
 
 pub const DEFAULT_CLOCK_SKEW_TOLERANCE: Duration = Duration::ZERO;
@@ -24,9 +28,16 @@ pub fn parse_pccb_json(raw: &[u8]) -> Result<PCCB, VerificationError> {
     normalize_pccb(pccb)
 }
 
+/// Consults the revocation source for a proof's signed authority
+/// (protocol/13-edge-binding.md E5): `Ok(true)` only when the authority is
+/// NOT revoked; `Err` when the source could not be consulted.
+pub type RevocationChecker =
+    Box<dyn Fn(&PCCB, &VerificationContext) -> Result<bool, String> + Send + Sync>;
+
 pub struct Verifier<V: SignatureVerifier> {
     signature_verifier: V,
     clock_skew_tolerance: Duration,
+    revocation_checker: Option<RevocationChecker>,
 }
 
 impl<V: SignatureVerifier> Verifier<V> {
@@ -34,7 +45,18 @@ impl<V: SignatureVerifier> Verifier<V> {
         Self {
             signature_verifier,
             clock_skew_tolerance: DEFAULT_CLOCK_SKEW_TOLERANCE,
+            revocation_checker: None,
         }
+    }
+
+    /// Configures the edge's revocation source. A proof whose signed
+    /// authority declares `"revocable": true` is refused without one.
+    pub fn with_revocation_checker<F>(mut self, checker: F) -> Self
+    where
+        F: Fn(&PCCB, &VerificationContext) -> Result<bool, String> + Send + Sync + 'static,
+    {
+        self.revocation_checker = Some(Box::new(checker));
+        self
     }
 
     pub fn with_clock_skew_tolerance(
@@ -64,6 +86,38 @@ impl<V: SignatureVerifier> Verifier<V> {
         input: VerificationContextInput,
     ) -> Result<VerificationContext, VerificationError> {
         normalize_context(input)
+    }
+
+    // protocol/13-edge-binding.md E5.
+    fn check_revocation(
+        &self,
+        pccb: &PCCB,
+        context: &VerificationContext,
+    ) -> Result<(), VerificationError> {
+        let unknown = || {
+            VerificationError::new(
+                VerificationErrorCode::AuthorityRevoked,
+                "The proof authority's revocation status could not be established.",
+            )
+        };
+        let mut revocable = false;
+        if pccb.extensions.contains_key("authority") {
+            let authority =
+                parse_authority_extension(Some(&pccb.extensions)).map_err(|_| unknown())?;
+            revocable = authority.revocable;
+        }
+        match &self.revocation_checker {
+            None if revocable => Err(unknown()),
+            None => Ok(()),
+            Some(checker) => match checker(pccb, context) {
+                Ok(true) => Ok(()),
+                Ok(false) => Err(VerificationError::new(
+                    VerificationErrorCode::AuthorityRevoked,
+                    "The proof authority has been revoked.",
+                )),
+                Err(_) => Err(unknown()),
+            },
+        }
     }
 
     pub fn verify(
@@ -108,14 +162,20 @@ impl<V: SignatureVerifier> Verifier<V> {
                 "The proof cannot be canonicalized for signature verification.",
             )
         })?;
-        if !self
+        // Token length, a `v1.` prefix, and well-formed JSON are not acceptance.
+        // No trust root is ISSUER_UNTRUSTED. A forged signature is SIGNATURE_INVALID.
+        let signature_verified = self
             .signature_verifier
-            .verify(&unsigned_payload, &normalized_pccb.signature)
-        {
-            return Err(VerificationError::new(
-                VerificationErrorCode::SignatureInvalid,
-                "The proof signature could not be verified.",
-            ));
+            .verify(&unsigned_payload, &normalized_pccb.signature);
+        if let Some(code) = unauthenticated_refusal(
+            self.signature_verifier.trust_root_configured(),
+            signature_verified,
+        ) {
+            let message = match code {
+                VerificationErrorCode::IssuerUntrusted => "The proof has no configured trust root.",
+                _ => "The proof signature could not be verified.",
+            };
+            return Err(VerificationError::new(code, message));
         }
 
         // ── Semantic checks (after signature is verified) ────────────────
@@ -143,21 +203,32 @@ impl<V: SignatureVerifier> Verifier<V> {
                 "The proof target does not exactly match the action intent.",
             ));
         }
-        if normalized_pccb.scope.mode != "exact" {
+        // Protocol v1 proofs are exact and single-use only (protocol/13 E4).
+        if normalized_pccb.scope.mode != "exact" || !normalized_pccb.scope.single_use {
             return Err(VerificationError::new(
                 VerificationErrorCode::ScopeModeInvalid,
                 "The proof scope mode is not supported.",
             ));
         }
-        if !normalized_pccb
-            .scope
-            .capabilities
-            .iter()
-            .any(|capability| capability == &normalized_intent.action.capability)
-        {
+        // Exact membership. A glob in the signed scope is not a capability and
+        // is not expanded to the attempted action.
+        if !capability_in_scope(
+            &normalized_intent.action.capability,
+            &normalized_pccb.scope.capabilities,
+        ) {
             return Err(VerificationError::new(
                 VerificationErrorCode::ScopeCapabilityMismatch,
                 "The proof scope does not allow this capability.",
+            ));
+        }
+        // E1: the capability must be one this endpoint declares it performs.
+        if !capability_in_scope(
+            &normalized_intent.action.capability,
+            &normalized_context.scope_capabilities,
+        ) {
+            return Err(VerificationError::new(
+                VerificationErrorCode::ScopeCapabilityMismatch,
+                "The action capability is not one this endpoint performs.",
             ));
         }
         if normalized_pccb.intent_id.as_deref().is_some()
@@ -208,6 +279,33 @@ impl<V: SignatureVerifier> Verifier<V> {
                 "The proof action hash does not match the action intent.",
             ));
         }
+        // E2: every constraint the endpoint relies on was signed into the proof.
+        for (key, value) in &normalized_context.parameter_constraints {
+            let covered = normalized_pccb
+                .scope
+                .parameter_constraints
+                .get(key)
+                .is_some_and(|signed| canonical_value_eq(signed, value));
+            if !covered {
+                return Err(VerificationError::new(
+                    VerificationErrorCode::ParameterMismatch,
+                    "The proof parameter constraints do not cover this endpoint's constraints.",
+                ));
+            }
+        }
+        // E3: the signed target satisfies at least one declared selector.
+        if !normalized_context.resource_selectors.is_empty()
+            && !normalized_context
+                .resource_selectors
+                .iter()
+                .any(|selector| target_satisfies(&normalized_pccb.target, selector))
+        {
+            return Err(VerificationError::new(
+                VerificationErrorCode::TargetMismatch,
+                "The proof target does not satisfy this endpoint's resource selectors.",
+            ));
+        }
+        self.check_revocation(&normalized_pccb, &normalized_context)?;
 
         Ok(VerifiedProtectedRequest {
             intent: normalized_intent,
@@ -517,13 +615,9 @@ fn normalize_context(
         "context.request_id",
         VerificationErrorCode::InvalidContext,
     )?;
+    // An empty declaration is refused by edge-binding rule E1 after the
+    // signature verifies, with the same code in every SDK.
     let mut capabilities = input.scope_capabilities;
-    if capabilities.is_empty() {
-        return Err(VerificationError::new(
-            VerificationErrorCode::InvalidContext,
-            "context.scope_capabilities must contain at least one capability.",
-        ));
-    }
     capabilities.sort();
 
     Ok(VerificationContext {
@@ -848,4 +942,29 @@ fn reject_duplicate_members(raw: &[u8]) -> Result<(), serde_json::Error> {
     let mut deserializer = Deserializer::from_slice(raw);
     serde::de::DeserializeSeed::deserialize(NoDuplicates, &mut deserializer)?;
     deserializer.end()
+}
+
+fn canonical_value_eq(left: &serde_json::Value, right: &serde_json::Value) -> bool {
+    match (canonicalize_bytes(left), canonicalize_bytes(right)) {
+        (Ok(left), Ok(right)) => left == right,
+        _ => false,
+    }
+}
+
+// protocol/13-edge-binding.md E3.
+fn target_satisfies(target: &TargetRef, selector: &JsonObject) -> bool {
+    if selector.is_empty() {
+        return false;
+    }
+    selector.iter().all(|(key, value)| {
+        let actual = match key.as_str() {
+            "resource_id" => serde_json::Value::String(target.resource_id.clone()),
+            "resource_type" => serde_json::Value::String(target.resource_type.clone()),
+            other => match target.selectors.get(other) {
+                Some(found) => found.clone(),
+                None => return false,
+            },
+        };
+        canonical_value_eq(&actual, value)
+    })
 }
