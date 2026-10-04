@@ -19,10 +19,16 @@ crates.io publication is prepared (Cargo.toml has all required fields, publish w
 
 ## Scope
 
-- `action_intent` v1 and `pccb` v1 Rust data structures
+- `action_intent` v1 and `pccb` v1 Rust data structures, aligned to
+  actenon-protocol wire `PROTOCOL_VERSION` `1.2.0` (package 1.5.0,
+  [actenon-protocol#21](https://github.com/Actenon/actenon-protocol/pull/21)
+  pin `d03236403ea160b3b63f0e6019468f380b2dfc6c`)
 - protected-endpoint proof verification, with the checks in the reference
-  verifier's order: signature first, then not-before/expiry, audience,
-  target, scope, intent, tenant, subject, action, and action hash
+  verifier's order: signature first (no trust root is `ISSUER_UNTRUSTED`; a
+  forged signature is `SIGNATURE_INVALID`), then not-before/expiry, audience,
+  target, scope, the edge's declared capability, intent, tenant, subject,
+  action, and action hash, then the edge's parameter constraints and resource
+  selectors, then revocation of `extensions.authority`
 - optional verifier-side clock skew tolerance, defaulting to zero
 - the `ACTENON-JCS-STRICT-1` canonicalisation profile (and the legacy
   `RFC8785-JCS` label), byte-identical to the Kernel's canonicaliser
@@ -35,9 +41,10 @@ crates.io publication is prepared (Cargo.toml has all required fields, publish w
 - signed exact-action approval verification
 - transparency-log checkpoint, inclusion and consistency verification
 
-The verifier is stateless. It does not enforce single use: record the
-proof's `pccb_id` / `nonce` in your replay store, and refuse a second use,
-before performing the side effect.
+The verifier is stateless. It refuses a proof whose signed `single_use` is
+not `true`. It does not record use: record the proof's `pccb_id` / `nonce`
+in your replay store, and refuse a second use, before performing the side
+effect.
 
 Known limitation (fails closed): integers outside `i64::MIN..=u64::MAX`, and
 `-0`, in action parameters are refused, because `serde_json` parses them as
@@ -87,6 +94,33 @@ the same calls run against real Permit-minted proofs in
 proofs signed with the public development key use
 `build_local_proof_verifier()` instead.
 
+### Capability provenance
+
+The path is Scan names a power, Permit signs that name into a grant and one
+concrete proof capability, this verifier checks the proof, and a receipt
+records the decision. This crate is the check. It does not confine a process
+or sandbox native code.
+
+- A capability is one exact string. `*`, `?`, `[`, and `]` are grant-scope
+  syntax, not capabilities, and they are not expanded. `capability_in_scope`
+  refuses a glob even when it is equal to itself.
+- `scope_capabilities_for_mint` refuses an empty set. The attempted action and
+  `*` are not substitutes.
+- `scope_capabilities_for_verification(None, capability)` is exactly that
+  capability. An empty declaration stays empty and authorises nothing
+  (`SCOPE_CAPABILITY_MISMATCH` after the signature verifies).
+- `SCOPE_CAPABILITY_MISMATCH` and `SCOPE_MODE_INVALID` are canonical codes.
+  They are not rewritten to `PARAMETER_MISMATCH`. A proof whose signed
+  `single_use` is not `true` is `SCOPE_MODE_INVALID`.
+- Parsing is not acceptance. A long string, a `v1.` prefix, or well-formed
+  JSON is not a proof. With no configured trust root the refusal is
+  `ISSUER_UNTRUSTED`. A signature that does not verify is `SIGNATURE_INVALID`.
+- When `extensions.authority.revocable` is true, configure
+  `Verifier::with_revocation_checker`. Unknown, revoked, or unreadable
+  authority is `AUTHORITY_REVOKED`.
+
+`PROTOCOL_VERSION` in this crate is `1.2.0`. Nothing here is published.
+
 ## The Actenon ecosystem
 
 <!-- ECOSYSTEM-TABLE:START -->
@@ -96,18 +130,19 @@ proofs signed with the public development key use
 | **`actenon-kernel`** | The open verifier — defines what a valid proof is | `actenon-protocol` | `actenon-kernel` (PyPI) |
 | **`actenon-permit`** | The developer on-ramp and authority broker | `actenon-kernel`, `actenon-protocol` | `actenon-permit` (PyPI) · `@actenon/sdk` (npm) |
 | **`actenon-scan`** | The independent static-analysis scanner | — | `actenon-scan` (PyPI) |
-| **`sdk-go`** | Go verifier SDK | `actenon-protocol` | `github.com/Actenon/sdk-go` (v1.0.0) |
-| **`sdk-rust`** ← you are here | Rust verifier SDK | `actenon-protocol` | `cargo add --git` (crates.io pending) |
+| **`sdk-go`** | Go verifier SDK — protected-endpoint proof verification in Go | `actenon-protocol` | [repo](https://github.com/Actenon/sdk-go) |
+| **`sdk-rust`** ← you are here | Rust verifier SDK — protected-endpoint proof verification in Rust | `actenon-protocol` | [repo](https://github.com/Actenon/sdk-rust) |
 
-**Optional:** [`actenon-cloud`](https://github.com/Actenon/actenon-cloud) — a managed control plane (source-available; see its LICENSE). Not required by any component above; every capability in this ecosystem works without it.
+**Optional:** `actenon-cloud` — a managed control plane (private repository, not publicly available). Not required by any component above; every capability in this ecosystem works without it.
 <!-- ECOSYSTEM-TABLE:END -->
 
 ## Conformance
 
 `cargo test` runs, from [`fixtures/`](fixtures/):
 
-- the Kernel's `verifier_sdk_v1` (16 `cases.json` cases and 6
-  fractional-second `timestamp_cases.json` cases), `canonicalization_strict_v1`,
+- the Kernel's `verifier_sdk_v1` (16 `cases.json` cases, 6
+  fractional-second `timestamp_cases.json` cases, 21 `edge_binding_cases.json`
+  cases, and 8 `edge_revocation_cases.json` cases), `canonicalization_strict_v1`,
   `receipt_countersignature_v1`, `transparency_log_v1` and
   `trust_artifacts_v1` vectors, copied byte-for-byte from the Kernel commit
   in `fixtures/KERNEL_PIN`. Every file the Kernel's

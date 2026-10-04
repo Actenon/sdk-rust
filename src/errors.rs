@@ -11,7 +11,9 @@ pub enum VerificationErrorCode {
     ProofNotYetValid,
     ProofExpired,
     AudienceMismatch,
+    /// Canonical from wire 1.2.0. Not an alias of [`Self::ParameterMismatch`].
     ScopeModeInvalid,
+    /// Canonical from wire 1.2.0. Not an alias of [`Self::ParameterMismatch`].
     ScopeCapabilityMismatch,
     IntentMismatch,
     TenantMismatch,
@@ -21,6 +23,13 @@ pub enum VerificationErrorCode {
     ActionHashAlgorithmInvalid,
     ActionHashMismatch,
     SignatureInvalid,
+    /// Edge parameter constraints the proof did not sign (protocol 13 E2).
+    /// Distinct from [`Self::ScopeCapabilityMismatch`] and [`Self::ScopeModeInvalid`].
+    ParameterMismatch,
+    /// Revocable authority could not be confirmed (protocol 13 E5).
+    AuthorityRevoked,
+    /// No trust root is configured. A forged signature is [`Self::SignatureInvalid`].
+    IssuerUntrusted,
 }
 
 impl VerificationErrorCode {
@@ -43,6 +52,9 @@ impl VerificationErrorCode {
             Self::ActionHashAlgorithmInvalid => "ACTION_HASH_ALGORITHM_INVALID",
             Self::ActionHashMismatch => "ACTION_HASH_MISMATCH",
             Self::SignatureInvalid => "SIGNATURE_INVALID",
+            Self::ParameterMismatch => "PARAMETER_MISMATCH",
+            Self::AuthorityRevoked => "AUTHORITY_REVOKED",
+            Self::IssuerUntrusted => "ISSUER_UNTRUSTED",
         }
     }
 }

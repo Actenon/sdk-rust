@@ -17,6 +17,12 @@ pub const LOCAL_PROOF_SECRET: &str = "actenon-local-proof-secret-v1";
 
 pub trait SignatureVerifier {
     fn verify(&self, payload: &[u8], signature: &SignatureSpec) -> bool;
+
+    /// Whether this verifier has a trust root. No keys is not a signature
+    /// failure: the refusal is `ISSUER_UNTRUSTED`.
+    fn trust_root_configured(&self) -> bool {
+        true
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -141,6 +147,10 @@ pub fn parse_ed25519_public_jwk(jwk_json: &str) -> Result<(String, [u8; 32]), Ve
 }
 
 impl SignatureVerifier for Ed25519Verifier {
+    fn trust_root_configured(&self) -> bool {
+        !self.keys.is_empty()
+    }
+
     fn verify(&self, payload: &[u8], signature: &SignatureSpec) -> bool {
         if signature.algorithm != "EdDSA" || signature.encoding != "base64url" {
             return false;
