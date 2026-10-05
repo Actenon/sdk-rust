@@ -1,0 +1,8 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
+   Doc-tests actenon_verifier_sdk
+
+running 1 test
+test src/lib.rs - ReadmeDoctests (line 109) - compile ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+

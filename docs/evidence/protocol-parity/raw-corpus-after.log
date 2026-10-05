@@ -1,0 +1,100 @@
+   Compiling version_check v0.9.5
+   Compiling typenum v1.20.1
+   Compiling proc-macro2 v1.0.107
+   Compiling semver v1.0.28
+   Compiling libc v0.2.189
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling subtle v2.6.1
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling cfg-if v1.0.4
+   Compiling serde_json v1.0.151
+   Compiling powerfmt v0.2.0
+   Compiling rustc_version v0.4.1
+   Compiling itoa v1.0.18
+   Compiling serde v1.0.229
+   Compiling generic-array v0.14.7
+   Compiling zeroize v1.9.0
+   Compiling curve25519-dalek v4.1.3
+   Compiling signature v2.2.0
+   Compiling ed25519 v2.2.3
+   Compiling deranged v0.5.8
+   Compiling memchr v2.8.3
+   Compiling num-conv v0.2.2
+   Compiling time-core v0.1.8
+   Compiling base64ct v1.6.0
+   Compiling time v0.3.47
+   Compiling base64 v0.22.1
+   Compiling syn v3.0.3
+   Compiling cpufeatures v0.2.17
+   Compiling block-buffer v0.10.4
+   Compiling crypto-common v0.1.7
+   Compiling digest v0.10.7
+   Compiling sha2 v0.10.9
+   Compiling hmac v0.12.1
+   Compiling serde_derive v1.0.229
+   Compiling ed25519-dalek v2.1.1
+   Compiling actenon-verifier-sdk v0.2.0 (/Users/ross/Documents/Codex/2026-10-03/referenced-chatgpt-conversation-this-is-an/work/sdk-rust-parity)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 9.37s
+     Running unittests src/lib.rs (target/debug/deps/actenon_verifier_sdk-2ff94512b206c89b)
+
+running 1 test
+test verifier::protocol_raw_parity::frozen_raw_canonical_corpus ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/capability_provenance_test.rs (target/debug/deps/capability_provenance_test-13b1119e6369d1e0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+     Running tests/countersignature_test.rs (target/debug/deps/countersignature_test-0ac6bb6ee1d52674)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running tests/kernel_interop_test.rs (target/debug/deps/kernel_interop_test-e08341b2a228dc4a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running tests/kernel_vector_lock_test.rs (target/debug/deps/kernel_vector_lock_test-0660662cac8a879d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/permit_interop_test.rs (target/debug/deps/permit_interop_test-959312ddc998c55e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/transparency_test.rs (target/debug/deps/transparency_test-5a34a0be4cb40c8f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/trust_artifacts_test.rs (target/debug/deps/trust_artifacts_test-4a13ce9ae5786d28)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/verifier_conformance_test.rs (target/debug/deps/verifier_conformance_test-f89fc7dbe83bc8ca)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running tests/verifier_test.rs (target/debug/deps/verifier_test-9d10a7fed26ad7ea)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+

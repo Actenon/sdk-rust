@@ -968,3 +968,67 @@ fn target_satisfies(target: &TargetRef, selector: &JsonObject) -> bool {
         canonical_value_eq(&actual, value)
     })
 }
+
+#[cfg(test)]
+mod protocol_raw_parity {
+    use super::*;
+    use base64::Engine;
+    use sha2::{Digest, Sha256};
+
+    #[test]
+    fn frozen_raw_canonical_corpus() {
+        let corpus: Value = serde_json::from_slice(
+            &std::fs::read("fixtures/protocol_canonicalisation/raw-corpus.json").unwrap(),
+        )
+        .unwrap();
+        let mut rows = Vec::new();
+        let mut failures = Vec::new();
+        for case in corpus["cases"].as_array().unwrap() {
+            let raw = base64::engine::general_purpose::STANDARD
+                .decode(case["raw_base64"].as_str().unwrap())
+                .unwrap();
+            assert_eq!(
+                format!("{:x}", Sha256::digest(&raw)),
+                case["raw_sha256"].as_str().unwrap()
+            );
+            let result = reject_duplicate_members(&raw)
+                .map_err(|e| e.to_string())
+                .and_then(|_| serde_json::from_slice::<Value>(&raw).map_err(|e| e.to_string()))
+                .and_then(|v| canonicalize_bytes(&v).map_err(|e| e.to_string()));
+            let mut row = serde_json::json!({"id": case["id"], "decision": "REFUSE"});
+            match result {
+                Ok(bytes) => {
+                    row["decision"] = serde_json::json!("ACCEPT");
+                    row["canonical_sha256"] =
+                        serde_json::json!(format!("{:x}", Sha256::digest(&bytes)));
+                    row["canonical_utf8"] = serde_json::json!(String::from_utf8(bytes).unwrap());
+                }
+                Err(error) => row["error"] = serde_json::json!(error),
+            }
+            let safe_reject = row["decision"] == "REFUSE"
+                && case["expected_decision"] == "ACCEPT"
+                && case["safe_rejection_profiles"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|p| p == "rust-i64-u64");
+            if safe_reject {
+                row["classification"] = serde_json::json!("SAFE_REJECT");
+            } else if row["decision"] != case["expected_decision"]
+                || (row["decision"] == "ACCEPT"
+                    && (row["canonical_utf8"] != case["canonical_utf8"]
+                        || row["canonical_sha256"] != case["canonical_sha256"]))
+            {
+                failures.push(case["id"].clone());
+            }
+            rows.push(row);
+        }
+        if let Ok(output) = std::env::var("ACTENON_PARITY_RESULTS") {
+            std::fs::write(output, serde_json::to_vec_pretty(&rows).unwrap()).unwrap();
+        }
+        assert!(
+            failures.is_empty(),
+            "decision/canonical byte mismatches: {failures:?}"
+        );
+    }
+}

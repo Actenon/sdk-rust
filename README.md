@@ -151,3 +151,15 @@ See [CONFORMANCE.md](https://github.com/Actenon/actenon-protocol/blob/main/CONFO
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE).
+
+### Candidate canonical profile correction
+
+Protocol `8e5bc9e342f694767508bae9a392749c6a8df2cc` is the authority for canonical
+depth: maximum 32 with root zero, including the legacy `RFC8785-JCS` label.
+Older 128-level Kernel fixtures remain byte-identical; a versioned correction
+requires refusal of the two historical signed depth-120/124 cases.
+The numeric domain remains `i64::MIN..=u64::MAX`; raw negative zero and valid
+Protocol integers outside that domain are explicit safe rejections. No lossy
+integer acceptance is permitted. This SDK does not claim universal Protocol
+numeric parity or effect protection.
+See [per-case results and failures](docs/evidence/protocol-parity/README.md).
