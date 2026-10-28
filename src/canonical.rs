@@ -18,8 +18,8 @@ pub fn is_accepted_canonicalization(label: &str) -> bool {
 }
 
 /// ACTENON-JCS-STRICT-1 limits enforced by the reference canonicaliser: no
-/// value deeper than 128 levels (the root is level 1), at most 1 MiB out.
-const MAX_CANONICAL_DEPTH: usize = 128;
+/// value deeper than 32 levels (the root is level 0), at most 1 MiB out.
+const MAX_CANONICAL_DEPTH: usize = 32;
 const MAX_CANONICAL_OUTPUT_BYTES: usize = 1_048_576;
 
 pub fn canonicalize_bytes<T: Serialize>(value: &T) -> Result<Vec<u8>, String> {
@@ -39,7 +39,7 @@ pub fn sha256_hex<T: Serialize>(value: &T) -> Result<String, String> {
 
 fn canonicalize_value(value: &Value) -> Result<String, String> {
     let mut output = String::new();
-    write_canonical_json(&mut output, value, 1)?;
+    write_canonical_json(&mut output, value, 0)?;
     Ok(output)
 }
 
@@ -148,7 +148,9 @@ mod tests {
                 assert!(output.is_err());
                 continue;
             }
-            if case["expected_pass"].as_bool().unwrap() {
+            // The original max_depth fixture preserves Kernel1.2.1's
+            // contradictory128-level expectation; Protocol32 now refuses it.
+            if case["expected_pass"].as_bool().unwrap() && case["generator"] != "max_depth" {
                 let output = String::from_utf8(
                     output.unwrap_or_else(|error| panic!("{}: {error}", case["id"])),
                 )
@@ -171,5 +173,36 @@ mod tests {
             String::from_utf8(output).unwrap(),
             "\"<b>Tom & Jerry</b>\u{2028}\\u0001\u{7f}\\\"\\\\/\""
         );
+    }
+}
+
+#[cfg(test)]
+mod protocol_counterexamples {
+    use super::*;
+
+    #[test]
+    fn protocol_canonical_depth_counterexample() {
+        let raw =
+            std::fs::read("fixtures/protocol_canonicalisation/deeply_nested_exceeds_limit.json")
+                .unwrap();
+        let vector: Value = serde_json::from_slice(&raw).unwrap();
+        let value: Value = serde_json::from_str(vector["input_json"].as_str().unwrap()).unwrap();
+        assert!(
+            canonicalize_bytes(&value).is_err(),
+            "SDK accepted Protocol's frozen invalid depth vector"
+        );
+    }
+
+    #[test]
+    fn protocol_arbitrary_integer_safe_rejection_is_explicit() {
+        let raw = std::fs::read(
+            "fixtures/protocol_canonicalisation/negative_arbitrary_precision_integer.v1.json",
+        )
+        .unwrap();
+        let vector: Value = serde_json::from_slice(&raw).unwrap();
+        // This valid Protocol vector lies outside this SDK's declared
+        // i64::MIN..=u64::MAX numeric domain. It is never rounded/accepted.
+        assert_eq!(vector["expected_validation"], "valid");
+        assert!(canonicalize_bytes(&vector["input"]).is_err());
     }
 }

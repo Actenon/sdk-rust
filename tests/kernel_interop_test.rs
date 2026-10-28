@@ -43,6 +43,25 @@ impl SignatureVerifier for AnyVerifier {
 /// the reference refuses.
 fn expectation(case: &Value) -> (String, String) {
     let reference = &case["expected"];
+    // Explicit, versioned correction to historical acceptances. Preserve the
+    // old fixture and require refusal under Protocol's32-depth profile.
+    let correction: Value = serde_json::from_slice(
+        &fs::read(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("fixtures/protocol_canonicalisation/legacy-expectation-correction.json"),
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    if let Some(fixed) = correction["cases"].get(case["id"].as_str().unwrap()) {
+        assert_eq!(reference["outcome"], fixed["original_outcome"]);
+        assert_eq!(fixed["outcome"], "refused");
+        return (
+            "refused".to_string(),
+            fixed["reason_code"].as_str().unwrap().to_string(),
+        );
+    }
+
     let expected = match case.pointer("/sdk_overrides/rust") {
         Some(rust) => {
             assert!(

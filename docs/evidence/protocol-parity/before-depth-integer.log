@@ -1,0 +1,61 @@
+   Compiling version_check v0.9.5
+   Compiling typenum v1.20.1
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.24
+   Compiling libc v0.2.189
+   Compiling semver v1.0.28
+   Compiling subtle v2.6.1
+   Compiling serde_core v1.0.229
+   Compiling cfg-if v1.0.4
+   Compiling zmij v1.0.23
+   Compiling signature v2.2.0
+   Compiling powerfmt v0.2.0
+   Compiling rustc_version v0.4.1
+   Compiling serde v1.0.229
+   Compiling generic-array v0.14.7
+   Compiling itoa v1.0.18
+   Compiling zeroize v1.9.0
+   Compiling serde_json v1.0.151
+   Compiling curve25519-dalek v4.1.3
+   Compiling deranged v0.5.8
+   Compiling ed25519 v2.2.3
+   Compiling time-core v0.1.8
+   Compiling cpufeatures v0.2.17
+   Compiling num-conv v0.2.2
+   Compiling memchr v2.8.3
+   Compiling base64 v0.22.1
+   Compiling base64ct v1.6.0
+   Compiling time v0.3.47
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling syn v3.0.3
+   Compiling digest v0.10.7
+   Compiling sha2 v0.10.9
+   Compiling hmac v0.12.1
+   Compiling ed25519-dalek v2.1.1
+   Compiling serde_derive v1.0.229
+   Compiling actenon-verifier-sdk v0.2.0 (/Users/ross/Documents/Codex/2026-10-03/referenced-chatgpt-conversation-this-is-an/work/sdk-rust-parity)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 18.94s
+     Running unittests src/lib.rs (target/debug/deps/actenon_verifier_sdk-2ff94512b206c89b)
+
+running 2 tests
+
+thread 'canonical::protocol_counterexamples::protocol_canonical_depth_counterexample' (5955932) panicked at src/canonical.rs:186:9:
+SDK accepted Protocol's frozen invalid depth vector
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test canonical::protocol_counterexamples::protocol_canonical_depth_counterexample ... FAILED
+
+thread 'canonical::protocol_counterexamples::protocol_arbitrary_integer_effect_counterexample' (5955931) panicked at src/canonical.rs:194:61:
+valid exact integer descriptor must canonicalize: "floating-point values are not supported in canonical action hashing"
+test canonical::protocol_counterexamples::protocol_arbitrary_integer_effect_counterexample ... FAILED
+
+failures:
+
+failures:
+    canonical::protocol_counterexamples::protocol_arbitrary_integer_effect_counterexample
+    canonical::protocol_counterexamples::protocol_canonical_depth_counterexample
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`

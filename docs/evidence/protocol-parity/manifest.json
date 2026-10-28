@@ -1,0 +1,24 @@
+{
+  "schema": "actenon-candidate-evidence/v1",
+  "created_at": "2026-10-05T10:04:52.556854+00:00",
+  "base": "dca4bd51c00c07abfd792cef8c8afffc9392e467",
+  "protocol": "8e5bc9e342f694767508bae9a392749c6a8df2cc",
+  "platform": "macOS-26.4.1-arm64-arm-64bit-Mach-O",
+  "files": {
+    "docs/evidence/protocol-parity/README.md": "7122bf0fb20f08296454f0d248b678708add85389ce610407caa781870594879",
+    "docs/evidence/protocol-parity/before-depth-integer.log": "94764dd61a44b45b968ddb21be516c344c18825d3aa32d41eaeb68b4ada340ba",
+    "docs/evidence/protocol-parity/clippy-final.log": "72089161074ed1157fda0b44451016b295cd9010212b94d78bba440c678a9d4a",
+    "docs/evidence/protocol-parity/doc-final.log": "99dbba3d4225923abe12d9c01a92111e7b7e33eaf35c1adafdda1f5d9910321f",
+    "docs/evidence/protocol-parity/doctest-final.log": "4b058ef10308733f55bd797d83e8db6baa3452249a4fd87dfe1fe6f38545a44f",
+    "docs/evidence/protocol-parity/full-after.log": "5fc2610fe5785ef85236552075f3984eb5a52c7ec69f155a0d8e7d2ce600fd28",
+    "docs/evidence/protocol-parity/full-final.log": "e4ff6f30d6d1abea4291b5e63450a8a37bb6392d61c1a128c083ce39ffad88c1",
+    "docs/evidence/protocol-parity/raw-corpus-after.json": "77143cddd45e2e6a70f8e3ecbee68bbc306444dc3e00706b6056229ebe20c590",
+    "docs/evidence/protocol-parity/raw-corpus-after.log": "69abff305fd8cd43fd1c8f6007ab5fecf45966a2caba69360ee66480978375a2",
+    "docs/evidence/protocol-parity/raw-corpus-final.json": "77143cddd45e2e6a70f8e3ecbee68bbc306444dc3e00706b6056229ebe20c590",
+    "fixtures/protocol_canonicalisation/deeply_nested_exceeds_limit.json": "acfe1c6f825f5417a3fb0708fc804329e5611562e5c19b75b8a662618d90b4fb",
+    "fixtures/protocol_canonicalisation/legacy-expectation-correction.json": "28f4ca4deacd29321130511f13fbf9e62e223e9764710d16fb89265a9f95b66a",
+    "fixtures/protocol_canonicalisation/negative_arbitrary_precision_integer.v1.json": "082b371f06c88609dd3dea625ab477b6ad645de28aa4a1472d141be3b08218db",
+    "fixtures/protocol_canonicalisation/raw-corpus.json": "cb3f54c89497fb42ea443d7fd8aada4f07fceb3cae84bd1f9e40ec4dd2bbe1dd",
+    "fixtures/protocol_canonicalisation/source.json": "52e340a61ebdb16685b6d4bbacb3e1222eca948fa44f2ffb7a117e1b211ea546"
+  }
+}

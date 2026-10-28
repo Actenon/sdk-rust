@@ -1,0 +1,111 @@
+   Compiling actenon-verifier-sdk v0.2.0 (/Users/ross/Documents/Codex/2026-10-03/referenced-chatgpt-conversation-this-is-an/work/sdk-rust-parity)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.82s
+     Running unittests src/lib.rs (target/debug/deps/actenon_verifier_sdk-2ff94512b206c89b)
+
+running 5 tests
+test canonical::protocol_counterexamples::protocol_canonical_depth_counterexample ... ok
+test canonical::tests::strings_are_encoded_like_the_reference ... ok
+test canonical::protocol_counterexamples::protocol_arbitrary_integer_safe_rejection_is_explicit ... ok
+test verifier::protocol_raw_parity::frozen_raw_canonical_corpus ... ok
+test canonical::tests::canonicalization_strict_v1_vectors ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+     Running tests/capability_provenance_test.rs (target/debug/deps/capability_provenance_test-13b1119e6369d1e0)
+
+running 10 tests
+test authority_extension_round_trip ... ok
+test mint_refuses_to_widen_an_empty_or_wildcard_set ... ok
+test globs_do_not_match_even_themselves ... ok
+test verification_set_does_not_replace_an_empty_declaration ... ok
+test unauthenticated_refusal_ignores_token_shape ... ok
+test wire_version_is_1_2_0 ... ok
+test capability_codes_are_not_parameter_mismatch ... ok
+test forged_signature_is_refused_before_an_empty_allow_list ... ok
+test no_trust_root_is_issuer_untrusted ... ok
+test empty_and_wildcard_edge_declarations_do_not_verify ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/countersignature_test.rs (target/debug/deps/countersignature_test-0ac6bb6ee1d52674)
+
+running 5 tests
+test countersignature_rejects_unknown_kid ... ok
+test countersignature_verifies_historical_key_offline ... ok
+test countersignature_rejects_altered_digest ... ok
+test countersignature_rejects_wrong_key ... ok
+test countersignature_accepts_pinned_digest ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/kernel_interop_test.rs (target/debug/deps/kernel_interop_test-e08341b2a228dc4a)
+
+running 8 tests
+test kernel_interop_artifact_vectors ... ok
+test accepts_current_canonicalization_profile ... ok
+test checks_in_reference_order ... ok
+test enforces_action_intent_semantics_and_escrow_binding ... ok
+test parses_json_like_the_reference_ingress ... ok
+test accepts_sub_second_timestamps ... ok
+test does_not_reorder_signed_capabilities ... ok
+test kernel_interop_vectors ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.91s
+
+     Running tests/kernel_vector_lock_test.rs (target/debug/deps/kernel_vector_lock_test-0660662cac8a879d)
+
+running 1 test
+test vendored_kernel_vectors_match_kernel_lock ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/permit_interop_test.rs (target/debug/deps/permit_interop_test-959312ddc998c55e)
+
+running 2 tests
+test ed25519_verifier_refuses_wrong_key_kid_and_algorithm ... ok
+test permit_minted_proofs_match_the_reference ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/transparency_test.rs (target/debug/deps/transparency_test-5a34a0be4cb40c8f)
+
+running 4 tests
+test checkpoint_rejects_unknown_kid ... ok
+test signed_but_unlogged_countersignature_is_rejected ... ok
+test monitor_rejects_signed_fork_and_rewind ... ok
+test transparency_proofs_and_historical_kids_verify_offline ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/trust_artifacts_test.rs (target/debug/deps/trust_artifacts_test-4a13ce9ae5786d28)
+
+running 1 test
+test issuer_status_is_fail_closed_and_approval_verifies_offline ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/verifier_conformance_test.rs (target/debug/deps/verifier_conformance_test-f89fc7dbe83bc8ca)
+
+running 5 tests
+test shared_verifier_vectors_are_all_executed ... ok
+test edge_revocation_vectors ... ok
+test shared_fractional_second_timestamp_vectors ... ok
+test edge_binding_vectors ... ok
+test shared_verifier_sdk_conformance_vectors ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/verifier_test.rs (target/debug/deps/verifier_test-9d10a7fed26ad7ea)
+
+running 8 tests
+test verifier_keeps_strict_not_before_behavior_by_default ... ok
+test verifier_refuses_action_hash_mismatch ... ok
+test verifier_accepts_proof_within_clock_skew_tolerance ... ok
+test verifier_refuses_expired_proof ... ok
+test verifier_refuses_audience_mismatch ... ok
+test verifier_refuses_action_mutation ... ok
+test verifier_accepts_valid_local_proof ... ok
+test verifier_refuses_proof_beyond_clock_skew_tolerance ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
